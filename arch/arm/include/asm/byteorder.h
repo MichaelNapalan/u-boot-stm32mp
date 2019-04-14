@@ -18,6 +18,21 @@
 
 #include <asm/types.h>
 
+static inline const __u32 __arch__swahb32(__u32 x)
+{
+	__asm__ ("rev16 %0, %1" : "=r" (x) : "r" (x));
+	return x;
+}
+#define __arch__swahb32 __arch__swahb32
+#define __arch__swab16(x) ((__u16)__arch__swahb32(x))
+
+static inline const __u32 __arch__swab32(__u32 x)
+{
+	__asm__ ("rev %0, %1" : "=r" (x) : "r" (x));
+	return x;
+}
+#define __arch_swab32 __arch__swab32
+
 #if !defined(__STRICT_ANSI__) || defined(__KERNEL__)
 #  define __BYTEORDER_HAS_U64__
 #  define __SWAB_64_THRU_32__

@@ -17,6 +17,7 @@
 #include <linux/log2.h>
 #include <linux/sizes.h>
 #include <dma.h>
+#include <watchdog.h>
 
 #include "sf_internal.h"
 
@@ -345,6 +346,7 @@ int spi_flash_cmd_erase_ops(struct spi_flash *flash, u32 offset, size_t len)
 
 	cmd[0] = flash->erase_cmd;
 	while (len) {
+		WATCHDOG_RESET();
 		erase_addr = offset;
 
 #ifdef CONFIG_SF_DUAL_FLASH
@@ -400,6 +402,7 @@ int spi_flash_cmd_write_ops(struct spi_flash *flash, u32 offset,
 
 	cmd[0] = flash->write_cmd;
 	for (actual = 0; actual < len; actual += chunk_len) {
+		WATCHDOG_RESET();
 		write_addr = offset;
 
 #ifdef CONFIG_SF_DUAL_FLASH

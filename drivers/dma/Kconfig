@@ -57,4 +57,10 @@ config APBH_DMA_BURST8
 
 endif
 
+config DMA_STM32
+	bool "STM32 DMA driver"
+	depends on DMA
+	help
+	  Enable the DMA driver for STM32
+
 endmenu # menu "DMA Support"

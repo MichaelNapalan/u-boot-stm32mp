@@ -44,7 +44,6 @@ config STM32F7
 	select SPL_SERIAL_SUPPORT
 	select SPL_SYS_MALLOC_SIMPLE
 	select SPL_TIMER
-	select SPL_XIP_SUPPORT
 	select STM32_RCC
 	select STM32_RESET
 	select STM32_SDRAM
