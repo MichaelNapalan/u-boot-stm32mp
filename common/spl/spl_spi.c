@@ -14,6 +14,11 @@
 #include <errno.h>
 #include <spl.h>
 
+/*
+ * Temporary hack to read the image from ENVM
+ */
+#define CONFIG_SF_DUMMY		0x08000000
+
 DECLARE_GLOBAL_DATA_PTR;
 
 #ifdef CONFIG_SPL_OS_BOOT
@@ -79,6 +84,7 @@ static int spl_spi_load_image(struct spl_image_info *spl_image,
 	 * Load U-Boot image from SPI flash into RAM
 	 */
 
+#ifndef CONFIG_SF_DUMMY
 	flash = spi_flash_probe(CONFIG_SF_DEFAULT_BUS,
 				CONFIG_SF_DEFAULT_CS,
 				CONFIG_SF_DEFAULT_SPEED,
@@ -87,13 +93,16 @@ static int spl_spi_load_image(struct spl_image_info *spl_image,
 		puts("SPI probe failed.\n");
 		return -ENODEV;
 	}
+#endif
 
 	header = spl_get_load_buffer(-sizeof(*header), sizeof(*header));
 
+#ifndef CONFIG_SF_DUMMY
 #if CONFIG_IS_ENABLED(OF_CONTROL) && !CONFIG_IS_ENABLED(OF_PLATDATA)
 	payload_offs = fdtdec_get_config_int(gd->fdt_blob,
 					     "u-boot,spl-payload-offset",
 					     payload_offs);
+#endif
 #endif
 
 #ifdef CONFIG_SPL_OS_BOOT
@@ -101,6 +110,7 @@ static int spl_spi_load_image(struct spl_image_info *spl_image,
 #endif
 	{
 		/* Load u-boot, mkimage header is 64 bytes. */
+#ifndef CONFIG_SF_DUMMY
 		err = spi_flash_read(flash, payload_offs, sizeof(*header),
 				     (void *)header);
 		if (err) {
@@ -108,6 +118,9 @@ static int spl_spi_load_image(struct spl_image_info *spl_image,
 			      __func__, err);
 			return err;
 		}
+#else
+		memcpy((void *)header, (void *)CONFIG_SF_DUMMY + payload_offs, sizeof(*header));
+#endif
 
 		if (IS_ENABLED(CONFIG_SPL_LOAD_FIT_FULL) &&
 		    image_get_magic(header) == FDT_MAGIC) {
@@ -132,12 +145,25 @@ static int spl_spi_load_image(struct spl_image_info *spl_image,
 						  payload_offs,
 						  header);
 		} else {
+#ifdef CONFIG_CPU_V7M
+			/*
+			 * Without this flag, the image entry point is ignored
+			 * and forcibly set to TEXT_BASE, which is not correct for CPU_V7M
+			 */
+			spl_image->flags |= SPL_COPY_PAYLOAD_ONLY;
+
+			payload_offs += sizeof(*header);
+#endif
 			err = spl_parse_image_header(spl_image, header);
 			if (err)
 				return err;
+#ifndef CONFIG_SF_DUMMY
 			err = spi_flash_read(flash, payload_offs,
 					     spl_image->size,
 					     (void *)spl_image->load_addr);
+#else
+			memcpy((void *)spl_image->load_addr, (void *)CONFIG_SF_DUMMY + payload_offs, spl_image->size);
+#endif
 		}
 	}
 
@@ -145,3 +171,49 @@ static int spl_spi_load_image(struct spl_image_info *spl_image,
 }
 /* Use priorty 1 so that boards can override this */
 SPL_LOAD_IMAGE_METHOD("SPI", 1, BOOT_DEVICE_SPI, spl_spi_load_image);
+
+/*
+ * Write a binary image to SPI Flash
+ */
+int spl_spi_save_image(ulong offset, ulong size, void *addr)
+{
+	int err = 0;
+	struct spi_flash *flash;
+	ulong erase_size;
+
+	flash = spi_flash_probe(CONFIG_SF_DEFAULT_BUS,
+				CONFIG_SF_DEFAULT_CS,
+				CONFIG_SF_DEFAULT_SPEED,
+				CONFIG_SF_DEFAULT_MODE);
+	if (!flash) {
+		puts("SPI probe failed.\n");
+		return -ENODEV;
+	}
+
+	if (offset + size > flash->size) {
+		puts("Incorrect image size.\n");
+		return -EINVAL;
+	}
+
+	if (offset % flash->erase_size) {
+		puts("Image offset not on sector boundary.\n");
+		return -EINVAL;
+	}
+
+	erase_size = size / flash->erase_size * flash->erase_size;
+	if (erase_size < size) erase_size += flash->erase_size;
+
+	err = spi_flash_erase(flash, offset, erase_size);
+	if (!flash) {
+		puts("SPI Flash erase failed.\n");
+		return err;
+	}
+
+	err = spi_flash_write(flash, offset, size, addr);
+	if (err) {
+		puts("SPI Flash write failed.\n");
+		return err;
+	}
+
+	return 0;
+}

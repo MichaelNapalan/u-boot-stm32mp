@@ -384,4 +384,17 @@ void spl_perform_fixups(struct spl_image_info *spl_image);
  */
 struct image_header *spl_get_load_buffer(ssize_t offset, size_t size);
 
+/*
+ * SPL shell related functions
+ */
+#ifdef CONFIG_SPL_KERMIT_SUPPORT
+int spl_kermit_load_binary(ulong offset, ulong offset_copy);
+#endif
+#ifdef CONFIG_SPL_ICPTF_SUPPORT
+int spl_icptf(ulong flash, void *addr);
+#endif
+#ifdef CONFIG_SPL_SPI_LOAD
+int spl_spi_save_image(ulong offset, ulong size, void *addr);
+#endif
+
 #endif

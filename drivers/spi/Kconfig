@@ -386,4 +386,9 @@ config OMAP3_SPI
 	  (McSPI). This driver be used to access SPI chips on platforms
 	  embedding this OMAP3 McSPI IP core.
 
+config STM32_SPI
+	bool "STM32 SPI driver"
+	help
+	  Enable the STM32 SPI driver for STM32F4.
+
 endif # menu "SPI Support"

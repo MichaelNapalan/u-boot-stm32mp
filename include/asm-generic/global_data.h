@@ -133,6 +133,12 @@ typedef struct global_data {
 	struct spl_handoff *spl_handoff;
 # endif
 #endif
+#ifdef CONFIG_SPL_SHELL_SUPPORT
+	void *spl_shell_data;
+#endif
+#ifdef CONFIG_SPL_KERMIT_SUPPORT
+	void *spl_kermit_data;
+#endif
 } gd_t;
 #endif
 
