@@ -7,14 +7,10 @@
 #ifndef _ASM_ARCH_HARDWARE_H
 #define _ASM_ARCH_HARDWARE_H
 
-/*
- * This empty files is needed to not break compilation
- * Some common drivers to STM32F4/F7 and H7 include a stm32.h file
- * Some cleanup need to be done to communalize all the following
- * stm32.h files:
- *
- * arch/arm/include/asm/arch-stm32f1/stm32.h
- * arch/arm/include/asm/arch-stm32f4/stm32.h
- * arch/arm/include/asm/arch-stm32f7/stm32.h
- */
+#define STM32H7_FLASH_CNTL_BASE	0x52002000
+
+static const u32 sect_sz_kb[CONFIG_SYS_MAX_FLASH_SECT] = {
+	[0 ... CONFIG_SYS_MAX_FLASH_SECT-1] = CONFIG_SYS_FLASH_SECT_SIZE
+};
+
 #endif /* _ASM_ARCH_HARDWARE_H */

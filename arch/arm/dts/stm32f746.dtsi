@@ -61,6 +61,7 @@
 
 	soc {
 		u-boot,dm-pre-reloc;
+
 		mac: ethernet@40028000 {
 			compatible = "st,stm32-dwmac";
 			reg = <0x40028000 0x8000>;
@@ -95,6 +96,7 @@
 			resets = <&rcc STM32F7_AHB3_RESET(QSPI)>;
 			status = "disabled";
 		};
+
 		usart1: serial@40011000 {
 			compatible = "st,stm32f7-usart", "st,stm32f7-uart";
 			reg = <0x40011000 0x400>;
@@ -109,6 +111,12 @@
 			reg = <0x40007000 0x400>;
 		};
 
+		rst: reset@40023800 {
+			#reset-cells = <1>;
+			compatible = "st,stm32-rcc";
+			reg = <0x40023800 0x400>;
+		};
+
 		rcc: rcc@40023810 {
 			#reset-cells = <1>;
 			#clock-cells = <2>;
@@ -117,6 +125,91 @@
 			clocks = <&clk_hse>;
 			st,syscfg = <&pwrcfg>;
 			u-boot,dm-pre-reloc;
+		};
+
+		dma1: dma@40026000 {
+			compatible = "st,stm32-dma";
+			#dma-cells = <2>;
+			reg = <0x40026000 0x400>;
+			interrupts = <11 12 13 14 15 16 17 47>;
+			clocks = <&rcc 0 STM32F7_AHB1_CLOCK(DMA1)>;
+			status = "disabled";
+		};
+
+		dma2: dma@40026400 {
+			compatible = "st,stm32-dma";
+			#dma-cells = <2>;
+			reg = <0x40026400 0x400>;
+			interrupts = <56 57 58 59 60 68 69 70>;
+			clocks = <&rcc 0 STM32F7_AHB1_CLOCK(DMA2)>;
+			status = "disabled";
+		};
+
+		spi_2: spi@40003800 {
+			compatible = "st,stm32-spi";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0x40003800 0x400>;
+			interrupts = <36>;
+			clocks = <&rcc 0 STM32F7_APB1_CLOCK(SPI2)>;
+			resets = <&rst STM32F7_APB1_RESET(SPI2)>;
+			status = "disabled";
+		};
+
+		spi_3: spi@40003c00 {
+			compatible = "st,stm32-spi";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0x40003c00 0x400>;
+			interrupts = <51>;
+			clocks = <&rcc 0 STM32F7_APB1_CLOCK(SPI3)>;
+			resets = <&rst STM32F7_APB1_RESET(SPI3)>;
+			status = "disabled";
+		};
+
+		spi_1: spi@40013000 {
+			compatible = "st,stm32-spi";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg-names = "QuadSPI", "QuadSPI-memory";
+			reg = <0x40013000 0x400>, <0x90000000 0x10000000>;
+			interrupts = <35>;
+			clocks = <&rcc 0 STM32F7_APB2_CLOCK(SPI1)>;
+			resets = <&rst STM32F7_APB2_RESET(SPI1)>;
+			status = "disabled";
+		};
+
+		spi_4: spi@40013400 {
+			compatible = "st,stm32-spi";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0x40013400 0x400>;
+			interrupts = <84>;
+			clocks = <&rcc 0 STM32F7_APB2_CLOCK(SPI4)>;
+			resets = <&rst STM32F7_APB2_RESET(SPI4)>;
+			status = "disabled";
+		};
+
+		spi_5: spi@40015000 {
+			compatible = "st,stm32-spi";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0x40015000 0x400>;
+			interrupts = <85>;
+			clocks = <&rcc 0 STM32F7_APB2_CLOCK(SPI5)>;
+			resets = <&rst STM32F7_APB2_RESET(SPI5)>;
+			status = "disabled";
+		};
+
+		spi_6: spi@40015400 {
+			compatible = "st,stm32-spi";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0x40015400 0x400>;
+			interrupts = <86>;
+			clocks = <&rcc 0 STM32F7_APB2_CLOCK(SPI6)>;
+			resets = <&rst STM32F7_APB2_RESET(SPI6)>;
+			status = "disabled";
 		};
 
 		pinctrl: pin-controller {
@@ -146,7 +239,6 @@
 				st,bank-name = "GPIOB";
 				u-boot,dm-pre-reloc;
 			};
-
 
 			gpioc: gpio@40020800 {
 				gpio-controller;
@@ -301,6 +393,7 @@
 			};
 
 		};
+
 		sdio: sdio@40012c00 {
 			compatible = "st,stm32f4xx-sdio";
 			reg = <0x40012c00 0x400>;

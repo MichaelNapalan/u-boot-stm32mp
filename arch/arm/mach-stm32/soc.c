@@ -10,6 +10,11 @@
 
 int arch_cpu_init(void)
 {
+/*
+ * Don't configure SDRAM area twice,
+ * especially if U-Boot proper is running from SDRAM
+ */
+#if !defined(CONFIG_SUPPORT_SPL) || defined(CONFIG_SPL_BUILD)
 	int i;
 
 	struct mpu_region_config stm32_region_config[] = {
@@ -31,6 +36,7 @@ int arch_cpu_init(void)
 	for (i = 0; i < ARRAY_SIZE(stm32_region_config); i++)
 		mpu_config(&stm32_region_config[i]);
 	enable_mpu();
+#endif
 
 	return 0;
 }

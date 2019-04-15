@@ -307,6 +307,7 @@ int do_bootelf(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		return rcode;
 
 	printf("## Starting application at 0x%08lx ...\n", addr);
+	mdelay(10);
 
 	/*
 	 * pass address parameter as argv[0] (aka command name),

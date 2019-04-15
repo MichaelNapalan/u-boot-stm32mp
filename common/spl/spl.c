@@ -33,6 +33,13 @@ DECLARE_GLOBAL_DATA_PTR;
 #define CONFIG_SYS_MONITOR_LEN	(200 * 1024)
 #endif
 
+#ifdef CONFIG_SPL_KERMIT_SUPPORT
+int spl_kermit_init(void);
+#endif
+#ifdef CONFIG_SPL_SHELL_SUPPORT
+int32_t spl_shell_init(void);
+#endif
+
 u32 *boot_params_ptr = NULL;
 
 /* See spl.h for information about this */
@@ -604,6 +611,14 @@ void board_init_r(gd_t *dummy1, ulong dummy2)
 		dram_init_banksize();
 
 	bootcount_inc();
+
+#ifdef CONFIG_SPL_KERMIT_SUPPORT
+	spl_kermit_init();
+#endif
+#ifdef CONFIG_SPL_SHELL_SUPPORT
+	if (spl_shell_init() == -12)
+		puts("spl shell exit\n");
+#endif
 
 	memset(&spl_image, '\0', sizeof(spl_image));
 #ifdef CONFIG_SYS_SPL_ARGS_ADDR

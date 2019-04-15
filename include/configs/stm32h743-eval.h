@@ -9,7 +9,6 @@
 
 #include <config.h>
 
-#define CONFIG_SYS_FLASH_BASE		0x08000000
 #define CONFIG_SYS_INIT_SP_ADDR		0x24040000
 
 /*
@@ -18,7 +17,15 @@
 #define CONFIG_SYS_LOAD_ADDR		0xD0400000
 #define CONFIG_LOADADDR			0xD0400000
 
-#define CONFIG_ENV_SIZE			(8 << 10)
+#define CONFIG_SYS_FLASH_BASE		0x08000000
+#define CONFIG_STM32H7_FLASH
+#define CONFIG_SYS_MAX_FLASH_SECT	8
+#define CONFIG_SYS_MAX_FLASH_BANKS	1
+#define CONFIG_SYS_FLASH_SECT_SIZE	0x20000		/* 128 KB */
+#define CONFIG_ENV_SECT_SIZE		(CONFIG_SYS_FLASH_SECT_SIZE)
+#define CONFIG_ENV_OFFSET		(3 * CONFIG_ENV_SECT_SIZE)
+#define CONFIG_ENV_ADDR			(CONFIG_SYS_FLASH_BASE + CONFIG_ENV_OFFSET)
+#define CONFIG_ENV_SIZE			(CONFIG_ENV_SECT_SIZE)
 
 #define CONFIG_SYS_HZ_CLOCK		1000000
 
@@ -44,7 +51,6 @@
 			"initrd_high=0xffffffffffffffff\0"	\
 			"ramdisk_addr_r=0xD0900000\0"		\
 			BOOTENV
-
 /*
  * Command line configuration.
  */

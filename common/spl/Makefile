@@ -30,4 +30,7 @@ obj-$(CONFIG_$(SPL_TPL_)DFU) += spl_dfu.o
 obj-$(CONFIG_$(SPL_TPL_)SPI_LOAD) += spl_spi.o
 obj-$(CONFIG_$(SPL_TPL_)RAM_SUPPORT) += spl_ram.o
 obj-$(CONFIG_$(SPL_TPL_)USB_SDP_SUPPORT) += spl_sdp.o
+obj-$(CONFIG_$(SPL_TPL_)SHELL_SUPPORT) += spl_shell.o
+obj-$(CONFIG_$(SPL_TPL_)KERMIT_SUPPORT) += spl_kermit.o
+obj-$(CONFIG_$(SPL_TPL_)ICPTF_SUPPORT) += spl_icptf.o
 endif
