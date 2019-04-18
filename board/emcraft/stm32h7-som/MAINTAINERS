@@ -1,0 +1,6 @@
+STM32H7 SOM
+M:	Emcraft System <www.emcraft.com>
+S:	Maintained
+F:	board/st/stm32h7-som
+F:	include/configs/stm32h7-som.h
+F:	configs/stm32h7_som_defconfig

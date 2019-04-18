@@ -321,7 +321,8 @@ dtb-$(CONFIG_STM32F7) += stm32f746-disco.dtb \
 	stm32746g-eval.dtb
 
 dtb-$(CONFIG_STM32H7) += stm32h743i-disco.dtb \
-	stm32h743i-eval.dtb
+	stm32h743i-eval.dtb \
+	stm32h7-som.dtb
 
 dtb-$(CONFIG_MACH_SUN4I) += \
 	sun4i-a10-a1000.dtb \

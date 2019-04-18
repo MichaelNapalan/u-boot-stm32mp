@@ -1,0 +1,19 @@
+if TARGET_STM32H7_SOM
+
+config SYS_BOARD
+	string
+	default "stm32h7-som"
+
+config SYS_VENDOR
+	string
+	default "emcraft"
+
+config SYS_SOC
+	string
+	default "stm32h7"
+
+config SYS_CONFIG_NAME
+	string
+	default "stm32h7-som"
+
+endif
