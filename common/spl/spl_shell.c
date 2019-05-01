@@ -17,32 +17,31 @@ DECLARE_GLOBAL_DATA_PTR;
 #define UCHAR_MAX		(255)       /*UCHAR_MAX*/
 //#define USHRT_MAX		(65535)     /*USHRT_MAX*/
 
-#define SHELL_OK				(0)			
-#define SHELL_ACCEPT			(-1)	
+#define SHELL_OK			(0)
+#define SHELL_ACCEPT			(-1)
 #define SHELL_INVALID			(-2)
 #define SHELL_QUEUE_FULL		(-3)
-#define SHELL_BUSY				(-4)	
-#define SHELL_IGNORE			(-5)	
-#define SHELL_ERROR				(-6)	
+#define SHELL_BUSY			(-4)
+#define SHELL_IGNORE			(-5)
+#define SHELL_ERROR			(-6)
 #define SHELL_NOT_ENOUGH		(-8)
-#define SHELL_PERMISSION_DENIED	(-11)			
-#define SHELL_EXIT				(-12)	
+#define SHELL_PERMISSION_DENIED		(-11)
+#define SHELL_EXIT			(-12)
 
-#define SHELL_ACCEPT_ID_ALL		(-32)			
+#define SHELL_ACCEPT_ID_ALL		(-32)
 
-
-#define	SHELL_COMMAND_HISTORY	(5)
-#define	SHELL_COMMAND_BUFSIZE	(50)
-#define	SHELL_COMMAND_MAXENTRY	(20)
-#define	SHELL_COMMAND_MAXLENGTH	(48)
+#define	SHELL_COMMAND_HISTORY		(5)
+#define	SHELL_COMMAND_BUFSIZE		(50)
+#define	SHELL_COMMAND_MAXENTRY		(20)
+#define	SHELL_COMMAND_MAXLENGTH		(48)
 #if( SHELL_COMMAND_MAXLENGTH > SHELL_COMMAND_BUFSIZE )
 	#error SHELL_COMMAND_MAXLENGTH too large
 #endif
-#define	SHELL_HELP_MAXLENGTH	(50)
+#define	SHELL_HELP_MAXLENGTH		(50)
 #define	SHELL_LINE_BUFFER		(90)
-#define SHELL_SPACE_LIMIT       (0x40000000)
+#define SHELL_SPACE_LIMIT		(0x40000000)
 
-#define SHELL_TYPE_INTERVAL_TIME (20)
+#define SHELL_TYPE_INTERVAL_TIME	(20)
 // ------------------------------------------------------------------ 
 // Desc: all macro functions
 // ------------------------------------------------------------------ 
@@ -166,7 +165,7 @@ static void test_usdhc( const char* arguments );
 // ------------------------------------------------------------------ 
 // Desc: prototype of public functions
 // ------------------------------------------------------------------ 
-Shell_Status spl_shell_init(void);
+uint32_t spl_shell_init(void);
 Shell_Status shell_addCommand( const char* command, const char* help, void (*func)( const char* arguments ) );
 
 
@@ -177,13 +176,13 @@ Shell_Status shell_addCommand( const char* command, const char* help, void (*fun
  
  date: 07/28/2017 | 17:20:46 PM | Friday,July
  **************************************************************************/
-Shell_Status spl_shell_init(void)
+uint32_t spl_shell_init(void)
 {
 	gd->spl_shell_data = malloc( sizeof(ShellData) );
 	if ( !gd->spl_shell_data )
 	{
 		printf( "spl_shell_init: malloc failed\n" );
-		return SHELL_EXIT;
+		return 1;
 	}
 
 	memset( gd->spl_shell_data, '\0', sizeof(ShellData) );
@@ -232,11 +231,31 @@ Shell_Status spl_shell_init(void)
 #endif
 
     gd_initialized = true;
+    return 0;
+}
 
-    if(shellRx(0) == SHELL_EXIT)
-        return (SHELL_EXIT);
+void spl_shell(char stop_key)
+{
+	int stop = 1;
+	char key = 0;
 
-    return( SHELL_OK );
+	if (stop_key) {
+		printf( "Hit '%c' key to enter spl shell: ", stop_key );
+		if (CONFIG_SPL_SHELL_BOOTDELAY > 0)
+			mdelay(CONFIG_SPL_SHELL_BOOTDELAY);
+		if (!tstc() || (key = getc()) != stop_key)
+			stop = 0;
+		if (key) {
+			putc(key);
+		}
+		putc('\n');
+	}
+	if (stop) {
+		if(shellRx(0) == SHELL_EXIT) {
+			gd_exit_tinyshell = false;
+			puts("\rExit spl shell\n");
+		}
+	}
 }
 
 /**************************************************************************

@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 /*
- * Emcraft Systems, www.emcraft.com
+ * Emcraft Systems, www.emcraft.com, (C) Copyright 2019
  */
 
 #ifndef __CONFIG_H
@@ -13,6 +13,7 @@
 /*
  * Configuration of the external SDRAM memory
  */
+#define CONFIG_SYS_UBOOT_START		0x240403FC
 #define CONFIG_SYS_LOAD_ADDR		0xD0400000
 #define CONFIG_LOADADDR			0xD0400000
 
@@ -25,6 +26,13 @@
 #define CONFIG_ENV_OFFSET		(3 * CONFIG_ENV_SECT_SIZE)
 #define CONFIG_ENV_ADDR			(CONFIG_SYS_FLASH_BASE + CONFIG_ENV_OFFSET)
 #define CONFIG_ENV_SIZE			(CONFIG_ENV_SECT_SIZE)
+#define CONFIG_SYS_UBOOT_BASE		(CONFIG_SYS_FLASH_BASE + CONFIG_SYS_FLASH_SECT_SIZE)
+
+/*
+ * SPL configuration
+ */
+#define CONFIG_SPL_STACK		(CONFIG_SYS_INIT_SP_ADDR - 0x2000)
+#define CONFIG_SPL_TEXT_BASE		CONFIG_SYS_FLASH_BASE
 
 #define CONFIG_SYS_HZ_CLOCK		1000000
 

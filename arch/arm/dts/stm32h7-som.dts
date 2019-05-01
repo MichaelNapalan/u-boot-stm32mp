@@ -1,5 +1,5 @@
 /*
- * Emcraft Systems, www.emcraft.com
+ * Emcraft Systems, www.emcraft.com, (C) Copyright 2019
  *
  * This file is dual-licensed: you can use it either under the terms
  * of the GPL or the X11 license, at your option. Note that this dual
@@ -74,10 +74,25 @@
 	};
 };
 
+&timer5 {
+	u-boot,dm-spl;
+};
+
 &usart1 {
+	u-boot,dm-spl;
 	pinctrl-0 = <&usart1_pins>;
 	pinctrl-names = "default";
 	status = "okay";
+};
+
+&usart1_pins {
+	u-boot,dm-spl;
+	pins1 {
+		u-boot,dm-spl;
+	};
+	pins2 {
+		u-boot,dm-spl;
+	};
 };
 
 &fmc {
@@ -96,7 +111,11 @@
 		st,sdram-timing = /bits/ 8 <TMRD_1 TXSR_1 TRAS_1 TRC_6 TRP_2
 				  TWR_1 TRCD_1>;
 		st,sdram-refcount = <1539>;
+		u-boot,dm-spl;
 	};
+};
+&fmc_pins {
+	u-boot,dm-spl;
 };
 
 &sdmmc1 {

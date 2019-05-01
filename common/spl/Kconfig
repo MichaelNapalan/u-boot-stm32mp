@@ -699,6 +699,14 @@ config SPL_SHELL_SUPPORT
 	help
 	  Enable shell in spl
 
+config SPL_SHELL_BOOTDELAY
+	int "delay in milliseconds before booting U-Boot from SPL"
+	default 200
+	depends on SPL_SHELL_SUPPORT
+	help
+	  Delay before booting U-Boot from SPL; SPL shell can be entered
+	  by pressing a special key during the delay interval.
+
 config SPL_KERMIT_SUPPORT
 	bool "Support SPL kermit transport"
 	depends on SPL

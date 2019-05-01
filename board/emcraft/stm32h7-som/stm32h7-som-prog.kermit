@@ -1,0 +1,51 @@
+#!/usr/bin/kermit +
+
+assign tty          \%1
+assign img          \%2
+assign loadaddr     0x2403FFC0
+assign copyaddr     0x30000000
+assign entry        0x240403FD
+assign flash_start  0x08020000
+assign flash_end    0x0805FFFF
+assign flash_size   0x40000
+assign spl_msg      {Hit 's' key to enter spl shell: }
+assign spl_key      {s}
+assign spl_prompt   {spl-> }
+assign uboot_msg    {Hit any key to stop autoboot: }
+assign uboot_key    {q}
+assign uboot_prompt {STM32H7-SOM U-Boot > }
+
+echo {Reset the board to start programming "\m(img)" via "\m(tty)"}
+
+set port \m(tty)
+set speed 115200
+set carrier-watch off
+set flow-control none
+set prefixing all
+
+INPUT 60 {\{13}\{10}\m(spl_msg)}
+IF FAIL EXIT 1 spl timeout
+
+OUTPUT \m(spl_key)
+INPUT 3 {\{13}\{10}\m(spl_prompt)}
+IF FAIL EXIT 1 spl prompt timeout
+
+OUTPUT loadb \m(loadaddr) \m(copyaddr)\{13}
+send \m(img)
+INPUT 60 {\{13}\{10}\m(spl_prompt)}
+IF FAIL EXIT 1 loadb timeout
+
+OUTPUT go \m(entry)\{13}
+INPUT 5 {\{13}\{10}\m(uboot_msg)}
+IF FAIL EXIT 1 u-boot timeout
+
+OUTPUT \m(uboot_key)
+INPUT 2 {\{13}\{10}\m(uboot_prompt)}
+IF FAIL EXIT 1 u-boot prompt timeout
+
+OUTPUT iminfo \m(copyaddr) && erase \m(flash_start) \m(flash_end) && cp.b \m(copyaddr) \m(flash_start) \m(flash_size)\{13}
+INPUT 30 {\{13}\{10}\m(uboot_prompt)}
+IF FAIL EXIT 1 erase/write timeout
+
+echo {\{13}\{10}Successfully programmed \m(img) to Flash at \m(flash_start)}
+EXIT 0

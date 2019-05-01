@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
- * Emcraft Systems, www.emcraft.com
+ * Emcraft Systems, www.emcraft.com, (C) Copyright 2019
  */
 
 #include <common.h>
 #include <dm.h>
+#include <spl.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -52,3 +53,35 @@ int board_init(void)
 	gd->bd->bi_boot_params = gd->bd->bi_dram[0].start + 0x100;
 	return 0;
 }
+
+#ifdef CONFIG_SPL_BUILD
+static int spl_dram_init(void)
+{
+	struct udevice *dev;
+	int rv;
+
+	rv = uclass_get_device(UCLASS_RAM, 0, &dev);
+	if (rv) {
+		debug("DRAM init failed: %d\n", rv);
+		return rv;
+	}
+	if (fdtdec_setup_mem_size_base() != 0)
+		rv = -EINVAL;
+	return rv;
+}
+
+void spl_board_init(void)
+{
+	/* DDR initialization */
+	spl_dram_init();
+	/* serial console initialization */
+	preloader_console_init();
+	/* configure mpu for sdram rw permissions */
+	arch_cpu_init();
+}
+
+u32 spl_boot_device(void)
+{
+	return BOOT_DEVICE_NOR;
+}
+#endif /* CONFIG_SPL_BUILD */
