@@ -133,6 +133,19 @@
 			cap-mmc-highspeed;
 			status = "disabled";
 		};
+
+		qspi: quadspi@52005000 {
+			compatible = "st,stm32-qspi";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0x52005000 0x1000>, <0x90000000 0x10000000>;
+			reg-names = "qspi", "qspi_mm";
+			interrupts = <92>;
+			spi-max-frequency = <108000000>;
+			clocks = <&rcc QUADSPI_CK>;
+			resets = <&rcc STM32H7_AHB3_RESET(QUADSPI)>;
+			status = "disabled";
+		};
 	};
 };
 

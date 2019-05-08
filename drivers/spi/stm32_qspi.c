@@ -161,6 +161,8 @@ struct stm32_qspi_platdata {
 	u32 base;
 	u32 memory_map;
 	u32 max_hz;
+	u32 flags;
+#define STM32_QSPI_FLAGS_W25N01		(1 << 0)
 };
 
 struct stm32_qspi_priv {
@@ -218,6 +220,87 @@ static void _stm32_qspi_set_cs(struct stm32_qspi_priv *priv, unsigned int cs)
 {
 	clrsetbits_le32(&priv->regs->cr, STM32_QSPI_CR_FSEL,
 			cs ? STM32_QSPI_CR_FSEL : 0);
+}
+
+/*
+ * Formats of Winbond W25N01 commands differ significantly from
+ * the ones of "normal" SPI NOR Flash chips and can't be figured out
+ * from raw in/out data that the spi-mem driver passes to this driver.
+ * So, we have to hard-code transaction format for each command here.
+ * Returned value corresponds to CCR register described in section
+ * "QUADSPI communication configuration register (QUADSPI_CCR)" of
+ * the STM32H7 manual.
+ */
+static unsigned int _stm32_qspi_gen_ccr_w25n01(struct stm32_qspi_priv *priv)
+{
+	u32 cmd = (priv->command & STM32_QSPI_CCR_INSTRUCTION_MASK);
+
+	switch (cmd) {
+	case 0xff:
+		return 0x000001ff;
+	case 0x9f:
+		return 0x0500019f;
+	case 0x13:
+		return 0x00002513;
+	case 0xf:
+		return 0x0500050f;
+	case 0x1f:
+		return 0x0100051f;
+	case 0xeb:
+		return 0x07101deb;
+	case 0x10:
+		return 0x00002510;
+	case 0x06:
+		return 0x00000106;
+	case 0xd8:
+		return 0x000025d8;
+	case 0x32:
+		return 0x03001532;
+	default:
+		printf("Unknown SPI Flash command %02x\n", cmd);
+		return 0;
+	}
+}
+
+static void stm32_qspi_w25n01_start_xfer(struct stm32_qspi_priv *priv,
+		const u8 *dout, size_t words)
+{
+	priv->command = dout[0];
+	priv->address = 0;
+
+	switch (priv->command) {
+	case 0xff:
+	case 0x06:
+	case 0x9f:
+		break;
+	case 0x13:
+	case 0x10:
+	case 0xd8:
+		/* Winbond W25N01 requires a dummy byte *before* 16 bit address
+		 * but the QSPI controller doesn't support this.
+		 * We emulate the dummy byte with 0xff in the highest byte of
+		 * 24-bit address */
+		priv->address = (0xFF << 16) | (dout[2] << 8) | dout[3];
+		priv->command |= CMD_HAS_ADR;
+		break;
+	case 0x1f:
+		priv->command |= CMD_HAS_DATA;
+		/* fall-through */
+	case 0xf:
+		priv->address = dout[1];
+		priv->command |= CMD_HAS_ADR;
+		break;
+	case 0x32:
+		priv->command |= CMD_HAS_DATA;
+		/* fall-through */
+	case 0xeb:
+		priv->address = (dout[1] << 8) | dout[2];
+		priv->command |= CMD_HAS_ADR;
+		break;
+	default:
+		printf("Unknown SPI Flash command %02x\n", priv->command);
+		return 0;
+	}
 }
 
 static unsigned int _stm32_qspi_gen_ccr(struct stm32_qspi_priv *priv, u8 fmode)
@@ -304,6 +387,7 @@ static void _stm32_qspi_start_xfer(struct stm32_qspi_priv *priv, u32 cr_reg)
 }
 
 static int _stm32_qspi_xfer(struct stm32_qspi_priv *priv,
+			    struct stm32_qspi_platdata *plat,
 			    struct spi_flash *flash, unsigned int bitlen,
 			    const u8 *dout, u8 *din, unsigned long flags)
 {
@@ -339,30 +423,37 @@ static int _stm32_qspi_xfer(struct stm32_qspi_priv *priv,
 
 	if (dout) {
 		if (flags & SPI_XFER_BEGIN) {
-			/* data is command */
-			priv->command = dout[0] | CMD_HAS_DATA;
-			if (words >= 4) {
-				/* address is here too */
-				priv->address = (dout[1] << 16) |
+			if (plat->flags & STM32_QSPI_FLAGS_W25N01)
+				stm32_qspi_w25n01_start_xfer(priv, dout, words);
+			else {
+				/* data is command */
+				priv->command = dout[0] | CMD_HAS_DATA;
+				if (words >= 4) {
+					/* address is here too */
+					priv->address = (dout[1] << 16) |
 						(dout[2] << 8) | dout[3];
-				priv->command |= CMD_HAS_ADR;
-			}
+					priv->command |= CMD_HAS_ADR;
+				}
 
-			if (words > 4) {
-				/* rest is dummy bytes */
-				priv->dummycycles = (words - 4) * 8;
-				priv->command |= CMD_HAS_DUMMY;
-			}
+				if (words > 4) {
+					/* rest is dummy bytes */
+					priv->dummycycles = (words - 4) * 8;
+					priv->command |= CMD_HAS_DUMMY;
+				}
 
-			if (flags & SPI_XFER_END) {
-				/* command without data */
-				priv->command &= ~(CMD_HAS_DATA);
+				if (flags & SPI_XFER_END) {
+					/* command without data */
+					priv->command &= ~(CMD_HAS_DATA);
+				}
 			}
 		}
 
 		if (flags & SPI_XFER_END) {
-			ccr_reg = _stm32_qspi_gen_ccr(priv,
-						      STM32_QSPI_CCR_IND_WRITE);
+			if (plat->flags & STM32_QSPI_FLAGS_W25N01)
+				ccr_reg = _stm32_qspi_gen_ccr_w25n01(priv);
+			else
+				ccr_reg = _stm32_qspi_gen_ccr(priv,
+						STM32_QSPI_CCR_IND_WRITE);
 
 			_stm32_qspi_wait_for_not_busy(priv);
 
@@ -382,6 +473,7 @@ static int _stm32_qspi_xfer(struct stm32_qspi_priv *priv,
 				i = 0;
 				while (words > i) {
 					writeb(dout[i], &priv->regs->dr);
+					udelay(1);
 					debug("%02x ", dout[i]);
 					i++;
 				}
@@ -393,7 +485,11 @@ static int _stm32_qspi_xfer(struct stm32_qspi_priv *priv,
 			}
 		}
 	} else if (din) {
-		ccr_reg = _stm32_qspi_gen_ccr(priv, STM32_QSPI_CCR_IND_READ);
+		if (plat->flags & STM32_QSPI_FLAGS_W25N01)
+			ccr_reg = _stm32_qspi_gen_ccr_w25n01(priv);
+		else
+			ccr_reg = _stm32_qspi_gen_ccr(priv,
+					STM32_QSPI_CCR_IND_WRITE);
 
 		_stm32_qspi_wait_for_not_busy(priv);
 
@@ -406,9 +502,12 @@ static int _stm32_qspi_xfer(struct stm32_qspi_priv *priv,
 
 		debug("%s: data:", __func__);
 
+		_stm32_qspi_wait_for_complete(priv);
+
 		i = 0;
 		while (words > i) {
 			din[i] = readb(&priv->regs->dr);
+			udelay(1);
 			debug("%02x ", din[i]);
 			i++;
 		}
@@ -440,6 +539,9 @@ static int stm32_qspi_ofdata_to_platdata(struct udevice *bus)
 
 	plat->base = res_regs.start;
 	plat->memory_map = res_mem.start;
+
+	if (device_is_compatible(bus, "st,stm32-qspi-w25n01"))
+		plat->flags = STM32_QSPI_FLAGS_W25N01;
 
 	debug("%s: regs=<0x%x> mapped=<0x%x>, max-frequency=%d\n",
 	      __func__,
@@ -550,14 +652,16 @@ static int stm32_qspi_xfer(struct udevice *dev, unsigned int bitlen,
 			   const void *dout, void *din, unsigned long flags)
 {
 	struct stm32_qspi_priv *priv;
+	struct stm32_qspi_platdata *plat;
 	struct udevice *bus;
 	struct spi_flash *flash;
 
 	bus = dev->parent;
 	priv = dev_get_priv(bus);
+	plat = dev_get_platdata(bus);
 	flash = dev_get_uclass_priv(dev);
 
-	return _stm32_qspi_xfer(priv, flash, bitlen, (const u8 *)dout,
+	return _stm32_qspi_xfer(priv, plat, flash, bitlen, (const u8 *)dout,
 				(u8 *)din, flags);
 }
 
@@ -660,6 +764,7 @@ static const struct dm_spi_ops stm32_qspi_ops = {
 static const struct udevice_id stm32_qspi_ids[] = {
 	{ .compatible = "st,stm32-qspi" },
 	{ .compatible = "st,stm32f469-qspi" },
+	{ .compatible = "st,stm32-qspi-w25n01" },
 	{ }
 };
 

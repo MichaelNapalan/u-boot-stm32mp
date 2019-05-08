@@ -71,6 +71,7 @@
 		gpio8 = &gpioi;
 		gpio9 = &gpioj;
 		gpio10 = &gpiok;
+		spi0 = &qspi;
 	};
 };
 
@@ -125,4 +126,28 @@
 	pinctrl-names = "default";
 	bus-width = <4>;
 	st,dirpol;
+};
+
+&qspi_pins {
+	u-boot,dm-spl;
+};
+
+&qspi {
+	compatible = "st,stm32-qspi-w25n01";
+	status = "okay";
+	pinctrl-0 = <&qspi_pins>;
+	pinctrl-names = "default";
+	u-boot,dm-spl;
+
+	spi-nand@0 {
+		compatible = "spi-nand";
+		u-boot,dm-spl;
+		spi-max-frequency = <18000000>; /* input clock */
+		spi-tx-bus-width = <4>;
+		spi-rx-bus-width = <4>;
+		memory-map = <0x90000000 0x1000000>;
+		reg = <0>; /* CS0 */
+		spi-cpol;
+		spi-cpha;
+	};
 };

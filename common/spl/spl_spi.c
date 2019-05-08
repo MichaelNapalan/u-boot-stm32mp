@@ -14,11 +14,6 @@
 #include <errno.h>
 #include <spl.h>
 
-/*
- * Temporary hack to read the image from ENVM
- */
-#define CONFIG_SF_DUMMY		0x08000000
-
 DECLARE_GLOBAL_DATA_PTR;
 
 #ifdef CONFIG_SPL_OS_BOOT

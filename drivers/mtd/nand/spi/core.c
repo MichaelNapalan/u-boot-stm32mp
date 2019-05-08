@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <spi.h>
 #include <spi-mem.h>
+#include <spi_flash.h>
 #include <linux/mtd/spinand.h>
 #endif
 
@@ -1246,10 +1247,63 @@ static const struct udevice_id spinand_ids[] = {
 	{ /* sentinel */ },
 };
 
+static int spi_flash_std_read(struct udevice *dev, u32 offset, size_t len,
+			      void *buf)
+{
+	struct spi_flash *flash = dev_get_uclass_priv(dev);
+	struct mtd_info *mtd = &flash->mtd;
+	size_t retlen;
+
+	return log_ret(mtd_read(mtd, offset, len, &retlen, buf));
+}
+
+static int spi_flash_std_write(struct udevice *dev, u32 offset, size_t len,
+			       const void *buf)
+{
+	struct spi_flash *flash = dev_get_uclass_priv(dev);
+	struct mtd_info *mtd = &flash->mtd;
+	size_t retlen;
+
+	return mtd->_write(mtd, offset, len, &retlen, buf);
+}
+
+static int spi_flash_std_erase(struct udevice *dev, u32 offset, size_t len)
+{
+	struct spi_flash *flash = dev_get_uclass_priv(dev);
+	struct mtd_info *mtd = &flash->mtd;
+	struct erase_info instr;
+
+	if (offset % mtd->erasesize || len % mtd->erasesize) {
+		printf("SF: Erase offset/length not multiple of erase size\n");
+		return -EINVAL;
+	}
+
+	memset(&instr, 0, sizeof(instr));
+	instr.addr = offset;
+	instr.len = len;
+
+	return mtd->_erase(mtd, &instr);
+}
+
+static int spi_flash_std_get_sw_write_prot(struct udevice *dev)
+{
+	struct spi_flash *flash = dev_get_uclass_priv(dev);
+
+	return spi_flash_cmd_get_sw_write_prot(flash);
+}
+
+static const struct dm_spi_flash_ops spi_flash_std_ops = {
+	.read = spi_flash_std_read,
+	.write = spi_flash_std_write,
+	.erase = spi_flash_std_erase,
+	.get_sw_write_prot = spi_flash_std_get_sw_write_prot,
+};
+
 U_BOOT_DRIVER(spinand) = {
 	.name = "spi_nand",
 	.id = UCLASS_MTD,
 	.of_match = spinand_ids,
 	.priv_auto_alloc_size = sizeof(struct spinand_device),
 	.probe = spinand_probe,
+	.ops = &spi_flash_std_ops,
 };

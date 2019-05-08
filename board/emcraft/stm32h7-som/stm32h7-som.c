@@ -82,6 +82,6 @@ void spl_board_init(void)
 
 u32 spl_boot_device(void)
 {
-	return BOOT_DEVICE_NOR;
+	return BOOT_DEVICE_SPI;
 }
 #endif /* CONFIG_SPL_BUILD */
