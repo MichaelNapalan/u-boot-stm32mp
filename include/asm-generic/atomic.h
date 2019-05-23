@@ -17,6 +17,13 @@ typedef struct { volatile long counter; } atomic64_t;
 #define atomic64_read(v)	atomic_read(v)
 #define atomic64_set(v, i)	atomic_set(v, i)
 
+#if defined(CONFIG_CPU_V7M)
+#undef local_irq_save
+#define local_irq_save(x) (x = x)
+#undef local_irq_restore
+#define local_irq_restore(x) (x = x)
+#endif
+
 static inline void atomic_add(int i, atomic_t *v)
 {
 	unsigned long flags = 0;
