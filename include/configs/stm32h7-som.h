@@ -8,12 +8,12 @@
 
 #include <config.h>
 
-#define CONFIG_SYS_INIT_SP_ADDR		0x24040000
+#define CONFIG_SYS_INIT_SP_ADDR		0x20020000
 
 /*
  * Configuration of the external SDRAM memory
  */
-#define CONFIG_SYS_UBOOT_START		0x240403FC
+#define CONFIG_SYS_UBOOT_START		0x240013FC
 #define CONFIG_SYS_LOAD_ADDR		0xD0400000
 #define CONFIG_LOADADDR			0xD0400000
 
@@ -22,16 +22,18 @@
 #define CONFIG_SYS_MAX_FLASH_SECT	1
 #define CONFIG_SYS_MAX_FLASH_BANKS	1
 #define CONFIG_SYS_FLASH_SECT_SIZE	0x20000		/* 128 KB */
-#define CONFIG_ENV_SECT_SIZE		(CONFIG_SYS_FLASH_SECT_SIZE)
-#define CONFIG_ENV_OFFSET		(3 * CONFIG_ENV_SECT_SIZE)
-#define CONFIG_ENV_ADDR			(CONFIG_SYS_FLASH_BASE + CONFIG_ENV_OFFSET)
-#define CONFIG_ENV_SIZE			(CONFIG_ENV_SECT_SIZE)
-#define CONFIG_SYS_UBOOT_BASE		(CONFIG_SYS_FLASH_BASE + CONFIG_SYS_FLASH_SECT_SIZE)
+
+#define CONFIG_ENV_SIZE			(0x4000)
+
+/* environment organization */
+#define CONFIG_ENV_UBI_PART		"system"
+#define CONFIG_ENV_UBI_VOLUME		"env1"
+#define CONFIG_ENV_UBI_VOLUME_REDUND	"env2"
 
 /*
  * SPL configuration
  */
-#define CONFIG_SPL_STACK		(CONFIG_SYS_INIT_SP_ADDR - 0x2000)
+#define CONFIG_SPL_STACK		(0x20010000)
 #define CONFIG_SPL_TEXT_BASE		CONFIG_SYS_FLASH_BASE
 
 #define CONFIG_SYS_SPI_U_BOOT_OFFS	0x00000000
@@ -59,6 +61,7 @@
 			"fdt_high=0xffffffffffffffff\0"		\
 			"initrd_high=0xffffffffffffffff\0"	\
 			"ramdisk_addr_r=0xD0900000\0"		\
+			"mtdparts=spi-nand0:1m(u-boot),15m(system),56m(rootfs),-(user)\0" \
 			BOOTENV
 /*
  * Command line configuration.
