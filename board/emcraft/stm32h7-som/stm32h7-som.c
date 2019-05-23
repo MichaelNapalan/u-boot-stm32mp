@@ -72,12 +72,13 @@ static int spl_dram_init(void)
 
 void spl_board_init(void)
 {
-	/* DDR initialization */
-	spl_dram_init();
 	/* serial console initialization */
 	preloader_console_init();
 	/* configure mpu for sdram rw permissions */
 	arch_cpu_init();
+	/* DDR initialization */
+	spl_dram_init();
+	dram_init_banksize();
 }
 
 u32 spl_boot_device(void)
