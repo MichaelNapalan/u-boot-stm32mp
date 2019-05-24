@@ -299,7 +299,7 @@ static void stm32_qspi_w25n01_start_xfer(struct stm32_qspi_priv *priv,
 		break;
 	default:
 		printf("Unknown SPI Flash command %02x\n", priv->command);
-		return 0;
+		return;
 	}
 }
 
