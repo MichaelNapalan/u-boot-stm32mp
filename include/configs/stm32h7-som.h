@@ -61,7 +61,7 @@
 			"fdt_high=0xffffffffffffffff\0"		\
 			"initrd_high=0xffffffffffffffff\0"	\
 			"ramdisk_addr_r=0xD0900000\0"		\
-			"mtdparts=spi-nand0:1m(u-boot),15m(system),56m(rootfs),-(user)\0" \
+			CONFIG_MTDPARTS_DEFAULT "\0" 		\
 			BOOTENV
 /*
  * Command line configuration.
