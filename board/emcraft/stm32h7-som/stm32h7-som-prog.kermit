@@ -2,11 +2,12 @@
 
 assign tty          \%1
 assign img          \%2
-assign loadaddr     0x2403FFC0
+assign rtos_img     \%3
+assign loadaddr     0x24000FC0
 assign copyaddr     0x30000000
-assign entry        0x240403FD
-assign flash_start  0x08020000
-assign flash_end    0x0805FFFF
+assign entry        0x240013FD
+assign flash_start  0x00000000
+assign flash_end    0x00060000
 assign flash_size   0x40000
 assign spl_msg      {Hit 's' key to enter spl shell: }
 assign spl_key      {s}
@@ -17,7 +18,7 @@ assign uboot_prompt {STM32H7-SOM U-Boot > }
 
 echo {Reset the board to start programming "\m(img)" via "\m(tty)"}
 
-set port \m(tty)
+set line \m(tty)
 set speed 115200
 set carrier-watch off
 set flow-control none
@@ -30,7 +31,7 @@ OUTPUT \m(spl_key)
 INPUT 3 {\{13}\{10}\m(spl_prompt)}
 IF FAIL EXIT 1 spl prompt timeout
 
-OUTPUT loadb \m(loadaddr) \m(copyaddr)\{13}
+OUTPUT loadb \m(loadaddr) \{13}
 send \m(img)
 INPUT 60 {\{13}\{10}\m(spl_prompt)}
 IF FAIL EXIT 1 loadb timeout
@@ -43,9 +44,35 @@ OUTPUT \m(uboot_key)
 INPUT 2 {\{13}\{10}\m(uboot_prompt)}
 IF FAIL EXIT 1 u-boot prompt timeout
 
-OUTPUT iminfo \m(copyaddr) && erase \m(flash_start) \m(flash_end) && cp.b \m(copyaddr) \m(flash_start) \m(flash_size)\{13}
+OUTPUT loadb \{13}
+send \m(img)
+INPUT 60 {\{13}\{10}\m(uboot_prompt)}
+IF FAIL EXIT 1 loadb timeout
+
+OUTPUT mtd erase u-boot && mtd write u-boot $loadaddr 0 $filesize \{13}
 INPUT 30 {\{13}\{10}\m(uboot_prompt)}
 IF FAIL EXIT 1 erase/write timeout
 
-echo {\{13}\{10}Successfully programmed \m(img) to Flash at \m(flash_start)}
+OUTPUT ubi part system && ubi create env1 8000 && ubi create env2 8000 \{13}
+INPUT 30 {\{13}\{10}\m(uboot_prompt)}
+IF FAIL EXIT 1 create env
+
+OUTPUT ubi create rtos1 100000 && ubi create rtos2 100000 \{13}
+INPUT 30 {\{13}\{10}\m(uboot_prompt)}
+IF FAIL EXIT 1 create rtos volumes
+
+OUTPUT ubi create splash 200000 \{13}
+INPUT 30 {\{13}\{10}\m(uboot_prompt)}
+IF FAIL EXIT 1 create splash volume
+
+OUTPUT loadb \{13}
+send \m(rtos_img)
+INPUT 60 {\{13}\{10}\m(uboot_prompt)}
+IF FAIL EXIT 1 loadb timeout
+
+OUTPUT ubi write $loadaddr rtos1 $filesize \{13}
+INPUT 30 {\{13}\{10}\m(uboot_prompt)}
+IF FAIL EXIT 1 writing rtos image to UBI
+
+echo {\{13}\{10}Successfully programmed \m(img) to SPI NAND at \m(flash_start)}
 EXIT 0
