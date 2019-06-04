@@ -61,6 +61,7 @@
 			"fdt_high=0xffffffffffffffff\0"		\
 			"initrd_high=0xffffffffffffffff\0"	\
 			"ramdisk_addr_r=0xD0900000\0"		\
+			"bootcmd=ubi read $loadaddr rtos1 && bootm\0" \
 			CONFIG_MTDPARTS_DEFAULT "\0" 		\
 			BOOTENV
 /*
