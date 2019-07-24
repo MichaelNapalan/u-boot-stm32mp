@@ -6,8 +6,47 @@
 #include <common.h>
 #include <dm.h>
 #include <spl.h>
+#include <asm/arch/gpio.h>
+#include <asm/gpio.h>
 
 DECLARE_GLOBAL_DATA_PTR;
+
+#define GPIOA	0
+#define GPIOB	(GPIOA + 16)
+#define GPIOC	(GPIOB + 16)
+#define GPIOD	(GPIOC + 16)
+#define GPIOE	(GPIOD + 16)
+#define GPIOF	(GPIOE + 16)
+#define GPIOG	(GPIOF + 16)
+#define GPIOH	(GPIOG + 16)
+#define GPIOI	(GPIOH + 16)
+#define GPIOJ	(GPIOI + 16)
+#define GPIOK	(GPIOJ + 16)
+
+static void custom_gpio_setup(void)
+{
+	unsigned int gpio;
+	int ret = 0;
+	int gpio_pin = GPIOB + 0; /* PB0 */
+	char gpio_name[4];
+
+	sprintf(gpio_name, "%d", gpio_pin);
+	if (gpio_lookup_name(gpio_name, NULL, NULL, &gpio)) {
+		printf("GPIO'%s' not found\n", gpio_name);
+		return;
+	}
+
+	ret = gpio_request(gpio, "gpio_cfg");
+	if (ret && ret != -EBUSY) {
+		printf("gpio: requesting pin %u failed\n", gpio);
+		return;
+	}
+
+	if (gpio_direction_output(gpio, 1)) {
+		printf("GPIO `%d' gpio_direction_output error\n", gpio);
+		return;
+	}
+}
 
 int dram_init(void)
 {
@@ -45,6 +84,7 @@ u32 get_board_rev(void)
 
 int board_late_init(void)
 {
+	custom_gpio_setup();
 	return 0;
 }
 
