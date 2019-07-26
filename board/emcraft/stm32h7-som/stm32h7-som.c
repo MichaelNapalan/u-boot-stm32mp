@@ -10,6 +10,8 @@
 #include <asm/arch/gpio.h>
 #include <asm/gpio.h>
 #include <dt-bindings/memory/stm32-sdram.h>
+#include <ubifs_uboot.h>
+#include <ubi_uboot.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -123,9 +125,56 @@ u32 get_board_rev(void)
 	return 0;
 }
 
+#ifndef CONFIG_SPL_BUILD
+struct uboot_abi {
+	unsigned int magic;
+#define UBOOT_ABI_MAGIC		0xB00DB00D
+	unsigned int version;
+#define UBOOT_ABI_VERSION	0x00000001
+	volatile void *gd;
+	void (*prepare_abi)(void);
+	int (*ubi_part)(char *part_name, const char *vid_header_offset);
+	int (*ubifs_mount)(char *vol_name);
+	int (*ubifs_umount)(void);
+	int (*ubifs_read)(const char *filename, void *buf, loff_t offset,
+			loff_t size, loff_t *actread);
+	int (*ubifs_ls)(const char *filename);
+	int (*ubifs_write)(const char *filename, void *buf, loff_t offset,
+			loff_t size, loff_t *actwritten);
+	int (*ubifs_mkdir)(const char *filename);
+	int (*ubifs_rmdir)(const char *filename);
+	int (*ubifs_unlink)(const char *filename);
+};
+
+static void prepare_abi(void)
+{
+	/* Function table is located at the start of ITCM */
+	struct uboot_abi *s = (void *)0x00000000;
+	gd = s->gd;
+}
+#endif
+
 int board_late_init(void)
 {
 	custom_gpio_setup();
+#ifndef CONFIG_SPL_BUILD
+	/* Function table is located at the start of ITCM */
+	struct uboot_abi *s = (void *)0x00000000;
+
+	s->magic = UBOOT_ABI_MAGIC;
+	s->version = UBOOT_ABI_VERSION;
+	s->gd = gd;
+	s->prepare_abi = prepare_abi;
+	s->ubi_part = ubi_part;
+	s->ubifs_mount = cmd_ubifs_mount;
+	s->ubifs_umount = cmd_ubifs_umount;
+	s->ubifs_read = ubifs_read;
+	s->ubifs_ls = ubifs_ls;
+	s->ubifs_write = ubifs_write;
+	s->ubifs_mkdir = ubifs_mkdir;
+	s->ubifs_rmdir = ubifs_rmdir;
+	s->ubifs_unlink = ubifs_unlink;
+#endif
 	return 0;
 }
 
