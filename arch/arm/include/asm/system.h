@@ -573,4 +573,9 @@ phys_addr_t noncached_alloc(size_t size, size_t align);
 
 #endif /* __ASSEMBLY__ */
 
+#define smp_wmb()
+#define smp_rmb()
+#define smp_mb__before_atomic()
+#define smp_mb__after_atomic()
+
 #endif

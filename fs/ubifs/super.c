@@ -1302,7 +1302,6 @@ again:
 	}
 }
 
-#ifndef __UBOOT__
 /**
  * check_free_space - check if there is enough free space to mount.
  * @c: UBIFS file-system description object
@@ -1321,7 +1320,6 @@ static int check_free_space(struct ubifs_info *c)
 	}
 	return 0;
 }
-#endif
 
 /**
  * mount_ubifs - mount UBIFS file-system.
@@ -1342,12 +1340,6 @@ static int mount_ubifs(struct ubifs_info *c)
 	c->ro_mount = !!(c->vfs_sb->s_flags & MS_RDONLY);
 	/* Suppress error messages while probing if MS_SILENT is set */
 	c->probing = !!(c->vfs_sb->s_flags & MS_SILENT);
-#ifdef __UBOOT__
-	if (!c->ro_mount) {
-		printf("UBIFS: only ro mode in U-Boot allowed.\n");
-		return -EACCES;
-	}
-#endif
 
 	err = init_constants_early(c);
 	if (err)
@@ -1392,25 +1384,21 @@ static int mount_ubifs(struct ubifs_info *c)
 	if (!c->sbuf)
 		goto out_free;
 
-#ifndef __UBOOT__
 	if (!c->ro_mount) {
 		c->ileb_buf = vmalloc(c->leb_size);
 		if (!c->ileb_buf)
 			goto out_free;
 	}
-#endif
 
 	if (c->bulk_read == 1)
 		bu_init(c);
 
-#ifndef __UBOOT__
 	if (!c->ro_mount) {
 		c->write_reserve_buf = kmalloc(COMPRESSED_DATA_NODE_BUF_SZ,
 					       GFP_KERNEL);
 		if (!c->write_reserve_buf)
 			goto out_free;
 	}
-#endif
 
 	c->mounting = 1;
 
@@ -1448,7 +1436,6 @@ static int mount_ubifs(struct ubifs_info *c)
 		goto out_cbuf;
 
 	sprintf(c->bgt_name, BGT_NAME_PATTERN, c->vi.ubi_num, c->vi.vol_id);
-#ifndef __UBOOT__
 	if (!c->ro_mount) {
 		/* Create background thread */
 		c->bgt = kthread_create(ubifs_bg_thread, c, "%s", c->bgt_name);
@@ -1461,7 +1448,6 @@ static int mount_ubifs(struct ubifs_info *c)
 		}
 		wake_up_process(c->bgt);
 	}
-#endif
 
 	err = ubifs_read_master(c);
 	if (err)
@@ -1474,19 +1460,16 @@ static int mount_ubifs(struct ubifs_info *c)
 		c->need_recovery = 1;
 	}
 
-#ifndef __UBOOT__
 	if (c->need_recovery && !c->ro_mount) {
 		err = ubifs_recover_inl_heads(c, c->sbuf);
 		if (err)
 			goto out_master;
 	}
-#endif
 
 	err = ubifs_lpt_init(c, 1, !c->ro_mount);
 	if (err)
 		goto out_master;
 
-#ifndef __UBOOT__
 	if (!c->ro_mount && c->space_fixup) {
 		err = ubifs_fixup_free_space(c);
 		if (err)
@@ -1503,7 +1486,6 @@ static int mount_ubifs(struct ubifs_info *c)
 		if (err)
 			goto out_lpt;
 	}
-#endif
 
 	err = dbg_check_idx_size(c, c->bi.old_idx_sz);
 	if (err)
@@ -1521,7 +1503,6 @@ static int mount_ubifs(struct ubifs_info *c)
 		goto out_orphans;
 
 	if (!c->ro_mount) {
-#ifndef __UBOOT__
 		int lnum;
 
 		err = check_free_space(c);
@@ -1562,7 +1543,6 @@ static int mount_ubifs(struct ubifs_info *c)
 		err = dbg_check_lprops(c);
 		if (err)
 			goto out_orphans;
-#endif
 	} else if (c->need_recovery) {
 		err = ubifs_recover_size(c);
 		if (err)
@@ -1694,9 +1674,7 @@ out_master:
 	kfree(c->rcvrd_mst_node);
 	if (c->bgt)
 		kthread_stop(c->bgt);
-#ifndef __UBOOT__
 out_wbufs:
-#endif
 	free_wbufs(c);
 out_cbuf:
 	kfree(c->cbuf);
@@ -1709,6 +1687,8 @@ out_free:
 	ubifs_debugging_exit(c);
 	return err;
 }
+
+static void ubifs_put_super(struct super_block *sb);
 
 /**
  * ubifs_umount - un-mount UBIFS file-system.
@@ -1728,6 +1708,10 @@ void ubifs_umount(struct ubifs_info *c)
 	dbg_gen("un-mounting UBI device %d, volume %d", c->vi.ubi_num,
 		c->vi.vol_id);
 
+#ifdef __UBOOT__
+	ubifs_put_super(ubifs_sb);
+#endif
+
 	dbg_debugfs_exit_fs(c);
 	spin_lock(&ubifs_infos_lock);
 	list_del(&c->infos_list);
@@ -1736,9 +1720,10 @@ void ubifs_umount(struct ubifs_info *c)
 #ifndef __UBOOT__
 	if (c->bgt)
 		kthread_stop(c->bgt);
+#endif
 
 	destroy_journal(c);
-#endif
+
 	free_wbufs(c);
 	free_orphans(c);
 	ubifs_lpt_free(c, 0);
@@ -1978,6 +1963,7 @@ static void ubifs_remount_ro(struct ubifs_info *c)
 		ubifs_ro_mode(c, err);
 	mutex_unlock(&c->umount_mutex);
 }
+#endif
 
 static void ubifs_put_super(struct super_block *sb)
 {
@@ -1985,6 +1971,8 @@ static void ubifs_put_super(struct super_block *sb)
 	struct ubifs_info *c = sb->s_fs_info;
 
 	ubifs_msg(c, "un-mount UBI device %d", c->vi.ubi_num);
+
+        c->ubi = ubi_open_volume(c->vi.ubi_num, c->vi.vol_id, UBI_READWRITE);
 
 	/*
 	 * The following asserts are only valid if there has not been a failure
@@ -2051,14 +2039,13 @@ static void ubifs_put_super(struct super_block *sb)
 		}
 	}
 
-	ubifs_umount(c);
 #ifndef __UBOOT__
+	ubifs_umount(c);
 	bdi_destroy(&c->bdi);
 #endif
 	ubi_close_volume(c->ubi);
 	mutex_unlock(&c->umount_mutex);
 }
-#endif
 
 #ifndef __UBOOT__
 static int ubifs_remount_fs(struct super_block *sb, int *flags, char *data)
@@ -2244,13 +2231,8 @@ static int ubifs_fill_super(struct super_block *sb, void *data, int silent)
 	int err;
 
 	c->vfs_sb = sb;
-#ifndef __UBOOT__
 	/* Re-open the UBI device in read-write mode */
 	c->ubi = ubi_open_volume(c->vi.ubi_num, c->vi.vol_id, UBI_READWRITE);
-#else
-	/* U-Boot read only mode */
-	c->ubi = ubi_open_volume(c->vi.ubi_num, c->vi.vol_id, UBI_READONLY);
-#endif
 
 	if (IS_ERR(c->ubi)) {
 		err = PTR_ERR(c->ubi);
@@ -2307,6 +2289,7 @@ static int ubifs_fill_super(struct super_block *sb, void *data, int silent)
 		err = PTR_ERR(root);
 		goto out_umount;
 	}
+	ubifs_iput(root);
 
 #ifndef __UBOOT__
 	sb->s_root = d_make_root(root);
@@ -2319,6 +2302,7 @@ static int ubifs_fill_super(struct super_block *sb, void *data, int silent)
 #endif
 
 	mutex_unlock(&c->umount_mutex);
+	ubi_close_volume(c->ubi);
 	return 0;
 
 out_umount:
@@ -2360,9 +2344,7 @@ static struct super_block *alloc_super(struct file_system_type *type, int flags)
 		return ERR_PTR(err);
 	}
 
-#ifndef __UBOOT__
 	INIT_HLIST_NODE(&s->s_instances);
-#endif
 	INIT_LIST_HEAD(&s->s_inodes);
 	s->s_time_gran = 1000000000;
 	s->s_flags = flags;
@@ -2431,12 +2413,14 @@ retry:
 #ifndef __UBOOT__
 	strlcpy(s->s_id, type->name, sizeof(s->s_id));
 	list_add_tail(&s->s_list, &super_blocks);
+#else
+	strncpy(s->s_id, type->name, sizeof(s->s_id));
+#endif
 	hlist_add_head(&s->s_instances, &type->fs_supers);
+#ifndef __UBOOT__
 	spin_unlock(&sb_lock);
 	get_filesystem(type);
 	register_shrinker(&s->s_shrink);
-#else
-	strncpy(s->s_id, type->name, sizeof(s->s_id));
 #endif
 	return s;
 }
@@ -2603,12 +2587,11 @@ int ubifs_init(void)
 	 * UBIFS_BLOCK_SIZE. It is assumed that both are powers of 2.
 	 */
 	if (PAGE_CACHE_SIZE < UBIFS_BLOCK_SIZE) {
-		pr_err("UBIFS error (pid %d): VFS page cache size is %u bytes, but UBIFS requires at least 4096 bytes\n",
+		pr_err("UBIFS error (pid %d): VFS page cache size is %u bytes, but UBIFS requires at least 4096 bytes",
 		       current->pid, (unsigned int)PAGE_CACHE_SIZE);
 		return -EINVAL;
 	}
 
-#ifndef __UBOOT__
 	ubifs_inode_slab = kmem_cache_create("ubifs_inode_slab",
 				sizeof(struct ubifs_inode), 0,
 				SLAB_MEM_SPREAD | SLAB_RECLAIM_ACCOUNT,
@@ -2616,6 +2599,7 @@ int ubifs_init(void)
 	if (!ubifs_inode_slab)
 		return -ENOMEM;
 
+#ifndef __UBOOT__
 	err = register_shrinker(&ubifs_shrinker_info);
 	if (err)
 		goto out_slab;
@@ -2695,7 +2679,7 @@ int uboot_ubifs_mount(char *vol_name)
 	/*
 	 * Mount in read-only mode
 	 */
-	flags = MS_RDONLY;
+	flags = MS_SYNCHRONOUS;
 	ret = ubifs_mount(&ubifs_fs_type, flags, vol_name, NULL);
 	if (IS_ERR(ret)) {
 		printf("Error reading superblock on volume '%s' " \

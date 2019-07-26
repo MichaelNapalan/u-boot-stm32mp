@@ -1026,15 +1026,13 @@ static int ensure_wear_leveling(struct ubi_device *ubi, int nested)
 	wrk->func = &wear_leveling_worker;
 	if (nested)
 		__schedule_ubi_work(ubi, wrk);
-#ifndef __UBOOT__
-	else
-		schedule_ubi_work(ubi, wrk);
-#else
 	else {
 		schedule_ubi_work(ubi, wrk);
+#ifndef __UBOOT__
 		ubi_do_worker(ubi);
-	}
 #endif
+	}
+
 	return err;
 
 out_cancel:

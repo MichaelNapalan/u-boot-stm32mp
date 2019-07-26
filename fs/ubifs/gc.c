@@ -43,11 +43,10 @@
 #ifndef __UBOOT__
 #include <linux/slab.h>
 #include <linux/pagemap.h>
-#include <linux/list_sort.h>
 #endif
+#include <linux/list_sort.h>
 #include "ubifs.h"
 
-#ifndef __UBOOT__
 /*
  * GC may need to move more than one LEB to make progress. The below constants
  * define "soft" and "hard" limits on the number of LEBs the garbage collector
@@ -287,13 +286,14 @@ static int sort_nodes(struct ubifs_info *c, struct ubifs_scan_leb *sleb,
 	/* Sort data and non-data nodes */
 	list_sort(c, &sleb->nodes, &data_nodes_cmp);
 	list_sort(c, nondata, &nondata_nodes_cmp);
-
+#ifndef __UBOOT__
 	err = dbg_check_data_nodes_order(c, &sleb->nodes);
 	if (err)
 		return err;
 	err = dbg_check_nondata_nodes_order(c, nondata);
 	if (err)
 		return err;
+#endif
 	return 0;
 }
 
@@ -908,10 +908,14 @@ out:
 int ubifs_gc_end_commit(struct ubifs_info *c)
 {
 	struct ubifs_gced_idx_leb *idx_gc, *tmp;
+#ifndef __UBOOT__
 	struct ubifs_wbuf *wbuf;
+#endif
 	int err = 0;
 
+#ifndef __UBOOT__
 	wbuf = &c->jheads[GCHD].wbuf;
+#endif
 	mutex_lock_nested(&wbuf->io_mutex, wbuf->jhead);
 	list_for_each_entry_safe(idx_gc, tmp, &c->idx_gc, list)
 		if (idx_gc->unmap) {
@@ -930,7 +934,7 @@ out:
 	mutex_unlock(&wbuf->io_mutex);
 	return err;
 }
-#endif
+
 /**
  * ubifs_destroy_idx_gc - destroy idx_gc list.
  * @c: UBIFS file-system description object
@@ -951,7 +955,7 @@ void ubifs_destroy_idx_gc(struct ubifs_info *c)
 		kfree(idx_gc);
 	}
 }
-#ifndef __UBOOT__
+
 /**
  * ubifs_get_idx_gc_leb - get a LEB from GC'd index LEB list.
  * @c: UBIFS file-system description object
@@ -972,4 +976,3 @@ int ubifs_get_idx_gc_leb(struct ubifs_info *c)
 	kfree(idx_gc);
 	return lnum;
 }
-#endif

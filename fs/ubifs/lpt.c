@@ -1051,7 +1051,6 @@ static int unpack_ltab(const struct ubifs_info *c, void *buf)
 	return err;
 }
 
-#ifndef __UBOOT__
 /**
  * unpack_lsave - unpack the LPT's save table.
  * @c: UBIFS file-system description object
@@ -1077,7 +1076,6 @@ static int unpack_lsave(const struct ubifs_info *c, void *buf)
 	err = check_lpt_crc(c, buf, c->lsave_sz);
 	return err;
 }
-#endif
 
 /**
  * validate_nnode - validate a nnode.
@@ -1337,7 +1335,6 @@ out:
 	return err;
 }
 
-#ifndef __UBOOT__
 /**
  * read_lsave - read LPT's save table.
  * @c: UBIFS file-system description object
@@ -1379,7 +1376,6 @@ out:
 	vfree(buf);
 	return err;
 }
-#endif
 
 /**
  * ubifs_get_nnode - get a nnode.
@@ -1677,7 +1673,6 @@ static int lpt_init_rd(struct ubifs_info *c)
 	return 0;
 }
 
-#ifndef __UBOOT__
 /**
  * lpt_init_wr - initialize the LPT for writing.
  * @c: UBIFS file-system description object
@@ -1716,7 +1711,6 @@ static int lpt_init_wr(struct ubifs_info *c)
 
 	return 0;
 }
-#endif
 
 /**
  * ubifs_lpt_init - initialize the LPT.
@@ -1740,21 +1734,17 @@ int ubifs_lpt_init(struct ubifs_info *c, int rd, int wr)
 			goto out_err;
 	}
 
-#ifndef __UBOOT__
 	if (wr) {
 		err = lpt_init_wr(c);
 		if (err)
 			goto out_err;
 	}
-#endif
 
 	return 0;
 
 out_err:
-#ifndef __UBOOT__
 	if (wr)
 		ubifs_lpt_free(c, 1);
-#endif
 	if (rd)
 		ubifs_lpt_free(c, 0);
 	return err;

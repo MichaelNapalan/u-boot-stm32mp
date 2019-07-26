@@ -597,7 +597,6 @@ int ubifs_wbuf_seek_nolock(struct ubifs_wbuf *wbuf, int lnum, int offs)
 	return 0;
 }
 
-#ifndef __UBOOT__
 /**
  * ubifs_bg_wbufs_sync - synchronize write-buffers.
  * @c: UBIFS file-system description object
@@ -833,8 +832,10 @@ exit:
 			goto out;
 	}
 
+#ifndef __UBOOT__
 	if (wbuf->used)
 		new_wbuf_timer_nolock(wbuf);
+#endif
 
 	return 0;
 
@@ -884,7 +885,6 @@ int ubifs_write_node(struct ubifs_info *c, void *buf, int len, int lnum,
 
 	return err;
 }
-#endif
 
 /**
  * ubifs_read_node_wbuf - read node from the media or write-buffer.

@@ -336,14 +336,12 @@ int ubifs_recover_master_node(struct ubifs_info *c)
 		 *    dirty.
 		 */
 		c->mst_node->flags |= cpu_to_le32(UBIFS_MST_DIRTY);
-#ifndef __UBOOT__
 	} else {
 		/* Write the recovered master node */
 		c->max_sqnum = le64_to_cpu(mst->ch.sqnum) - 1;
 		err = write_rcvrd_mst_node(c, c->mst_node);
 		if (err)
 			goto out_free;
-#endif
 	}
 
 	vfree(buf2);
@@ -520,7 +518,6 @@ static int fix_unclean_leb(struct ubifs_info *c, struct ubifs_scan_leb *sleb,
 		ucleb->lnum = lnum;
 		ucleb->endpt = endpt;
 		list_add_tail(&ucleb->list, &c->unclean_leb_list);
-#ifndef __UBOOT__
 	} else {
 		/* Write the fixed LEB back to flash */
 		int err;
@@ -554,7 +551,6 @@ static int fix_unclean_leb(struct ubifs_info *c, struct ubifs_scan_leb *sleb,
 			if (err)
 				return err;
 		}
-#endif
 	}
 	return 0;
 }
@@ -1098,7 +1094,6 @@ int ubifs_clean_lebs(struct ubifs_info *c, void *sbuf)
 	return 0;
 }
 
-#ifndef __UBOOT__
 /**
  * grab_empty_leb - grab an empty LEB to use as GC LEB and run commit.
  * @c: UBIFS file-system description object
@@ -1225,12 +1220,6 @@ int ubifs_rcvry_gc_commit(struct ubifs_info *c)
 	dbg_rcvry("allocated LEB %d for GC", lp.lnum);
 	return 0;
 }
-#else
-int ubifs_rcvry_gc_commit(struct ubifs_info *c)
-{
-	return 0;
-}
-#endif
 
 /**
  * struct size_entry - inode size information for recovery.
@@ -1410,7 +1399,6 @@ int ubifs_recover_size_accum(struct ubifs_info *c, union ubifs_key *key,
 	return 0;
 }
 
-#ifndef __UBOOT__
 /**
  * fix_size_in_place - fix inode size in place on flash.
  * @c: UBIFS file-system description object
@@ -1466,7 +1454,6 @@ out:
 		   (unsigned long)e->inum, e->i_size, e->d_size, err);
 	return err;
 }
-#endif
 
 /**
  * ubifs_recover_size - recover inode size.
@@ -1533,7 +1520,6 @@ int ubifs_recover_size(struct ubifs_info *c)
 					continue;
 				}
 				iput(inode);
-#ifndef __UBOOT__
 			} else {
 				/* Fix the size in place */
 				err = fix_size_in_place(c, e);
@@ -1541,7 +1527,6 @@ int ubifs_recover_size(struct ubifs_info *c)
 					return err;
 				if (e->inode)
 					iput(e->inode);
-#endif
 			}
 		}
 

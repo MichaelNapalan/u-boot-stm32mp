@@ -323,7 +323,6 @@ no_space:
 	return err;
 }
 
-#ifndef __UBOOT__
 /**
  * realloc_lpt_leb - allocate an LPT LEB that is empty.
  * @c: UBIFS file-system description object
@@ -455,9 +454,9 @@ static int write_cnodes(struct ubifs_info *c)
 		 * 'dirty_cow_pnode()' are the functions for which this is
 		 * important.
 		 */
-		clear_bit(DIRTY_CNODE, &cnode->flags);
+		__clear_bit(DIRTY_CNODE, &cnode->flags);
 		smp_mb__before_atomic();
-		clear_bit(COW_CNODE, &cnode->flags);
+		__clear_bit(COW_CNODE, &cnode->flags);
 		smp_mb__after_atomic();
 		offs += len;
 		dbg_chk_lpt_sz(c, 1, len);
@@ -547,7 +546,6 @@ no_space:
 	dump_stack();
 	return err;
 }
-#endif
 
 /**
  * next_pnode_to_dirty - find next pnode to dirty.
@@ -1310,7 +1308,6 @@ static void free_obsolete_cnodes(struct ubifs_info *c)
 	c->lpt_cnext = NULL;
 }
 
-#ifndef __UBOOT__
 /**
  * ubifs_lpt_end_commit - finish the commit operation.
  * @c: the UBIFS file-system description object
@@ -1339,7 +1336,6 @@ int ubifs_lpt_end_commit(struct ubifs_info *c)
 
 	return 0;
 }
-#endif
 
 /**
  * ubifs_lpt_post_commit - post commit LPT trivial GC and LPT GC.
@@ -1489,7 +1485,6 @@ void ubifs_lpt_free(struct ubifs_info *c, int wr_only)
 	kfree(c->lpt_nod_buf);
 }
 
-#ifndef __UBOOT__
 /*
  * Everything below is related to debugging.
  */
@@ -1996,6 +1991,7 @@ void ubifs_dump_lpt_lebs(const struct ubifs_info *c)
 	pr_err("(pid %d) finish dumping all LPT LEBs\n", current->pid);
 }
 
+#ifndef __UBOOT__
 /**
  * dbg_populate_lsave - debugging version of 'populate_lsave()'
  * @c: UBIFS file-system description object

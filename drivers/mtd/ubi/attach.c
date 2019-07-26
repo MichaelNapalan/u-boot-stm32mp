@@ -1204,7 +1204,8 @@ static void destroy_ai(struct ubi_attach_info *ai)
 		}
 	}
 
-	kmem_cache_destroy(ai->aeb_slab_cache);
+	if (ai->aeb_slab_cache)
+		kmem_cache_destroy(ai->aeb_slab_cache);
 
 	kfree(ai);
 }
@@ -1437,19 +1438,19 @@ int ubi_attach(struct ubi_device *ubi, int force_scan)
 	ubi->corr_peb_count = ai->corr_peb_count;
 	ubi->max_ec = ai->max_ec;
 	ubi->mean_ec = ai->mean_ec;
-	dbg_gen("max. sequence number:       %llu", ai->max_sqnum);
+	dbg_gen("max. sequence number:       %lld", ai->max_sqnum);
 
 	err = ubi_read_volume_table(ubi, ai);
 	if (err)
 		goto out_ai;
 
-	err = ubi_wl_init(ubi, ai);
-	if (err)
-		goto out_vtbl;
-
 	err = ubi_eba_init(ubi, ai);
 	if (err)
 		goto out_wl;
+
+	err = ubi_wl_init(ubi, ai);
+	if (err)
+		goto out_vtbl;
 
 #ifdef CONFIG_MTD_UBI_FASTMAP
 	if (ubi->fm && ubi_dbg_chk_fastmap(ubi)) {

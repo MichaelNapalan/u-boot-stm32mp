@@ -375,4 +375,7 @@ typedef unsigned long dmaaddr_t;
 #define free_irq(irq, data) do {} while (0)
 #define request_irq(nr, f, flags, nm, data) 0
 
+#define i_uid_read(x)       (0)
+#define i_gid_read(x)       (0)
+
 #endif

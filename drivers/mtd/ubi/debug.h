@@ -30,7 +30,7 @@ void ubi_dump_vid_hdr(const struct ubi_vid_hdr *vid_hdr);
 		print_hex_dump(ps, pt, r, g, b, len, a)
 
 #define ubi_dbg_msg(type, fmt, ...) \
-	pr_debug("UBI DBG " type " (pid %d): " fmt "\n", current->pid,       \
+	pr_debug("UBI DBG " type " (pid %d): " fmt "\n", (int) current->pid, \
 		 ##__VA_ARGS__)
 
 /* General debugging messages */
