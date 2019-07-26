@@ -5,9 +5,11 @@
 
 #include <common.h>
 #include <dm.h>
+#include <dm/uclass-internal.h>
 #include <spl.h>
 #include <asm/arch/gpio.h>
 #include <asm/gpio.h>
+#include <dt-bindings/memory/stm32-sdram.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -48,12 +50,59 @@ static void custom_gpio_setup(void)
 	}
 }
 
+static int detect_sdram_size(void)
+{
+	int ret = 0;
+	int gpio_pin = GPIOE + 2; /* PE2 */
+	u32 * gpioe_pullup_reg = (u32 *)(0x5802100C);
+
+	ret = gpio_request(gpio_pin, "dram_cfg");
+	if (ret && ret != -EBUSY) {
+		debug("gpio: requesting pin %u failed\n", gpio_pin);
+		return -1;
+	}
+	gpio_direction_input(gpio_pin);
+	* gpioe_pullup_reg |= 0x10;
+	ret = gpio_get_value(gpio_pin);
+	* gpioe_pullup_reg &= ~0x10;
+	return ret;
+}
+
+static void dts_fixup(struct udevice *dev)
+{
+	ofnode ofnode;
+	u8 * sdram_control;
+	char * sdram_prop = "st,sdram-control";
+	u32 * mem;
+	int size;
+
+	ofnode = ofnode_find_subnode(dev->node, "bank@1");
+	size = ofnode_read_size(ofnode, sdram_prop);
+	sdram_control = (u8 *)ofnode_read_u8_array_ptr(ofnode, sdram_prop, size);
+	sdram_control[2] = MWIDTH_32;
+	ofnode = ofnode_path("/memory");
+	if (ofnode_valid(ofnode)) {
+		mem = (u32 *)ofnode_get_property(ofnode, "reg", &size);
+		mem[1] = 0x4;
+	}
+}
+
 int dram_init(void)
 {
 	struct udevice *dev;
 	int ret;
 
-	ret = uclass_get_device(UCLASS_RAM, 0, &dev);
+	ret = uclass_find_device(UCLASS_RAM, 0, &dev);
+	if (ret) {
+		debug("DRAM find device failed: %d\n", ret);
+		return ret;
+	}
+
+	if (detect_sdram_size() == 1) {
+		dts_fixup(dev);
+	}
+
+	ret = uclass_get_device_tail(dev, ret, &dev);
 	if (ret) {
 		debug("DRAM init failed: %d\n", ret);
 		return ret;
