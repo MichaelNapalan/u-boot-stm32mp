@@ -44,6 +44,7 @@ obj-$(CONFIG_SUPPORT_EMMC_RPMB) += sha256.o
 obj-$(CONFIG_RBTREE)	+= rbtree.o
 obj-$(CONFIG_BITREVERSE) += bitrev.o
 obj-y += list_sort.o
+obj-y += sort.o
 endif
 
 obj-$(CONFIG_$(SPL_TPL_)TPM) += tpm-common.o
