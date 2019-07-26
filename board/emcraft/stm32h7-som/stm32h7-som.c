@@ -27,25 +27,17 @@ DECLARE_GLOBAL_DATA_PTR;
 
 static void custom_gpio_setup(void)
 {
-	unsigned int gpio;
 	int ret = 0;
-	int gpio_pin = GPIOB + 0; /* PB0 */
-	char gpio_name[4];
+	unsigned int gpio_pin = GPIOB + 0; /* PB0 */
 
-	sprintf(gpio_name, "%d", gpio_pin);
-	if (gpio_lookup_name(gpio_name, NULL, NULL, &gpio)) {
-		printf("GPIO'%s' not found\n", gpio_name);
-		return;
-	}
-
-	ret = gpio_request(gpio, "gpio_cfg");
+	ret = gpio_request(gpio_pin, "gpio_cfg");
 	if (ret && ret != -EBUSY) {
-		printf("gpio: requesting pin %u failed\n", gpio);
+		printf("gpio: requesting pin %u failed\n", gpio_pin);
 		return;
 	}
 
-	if (gpio_direction_output(gpio, 1)) {
-		printf("GPIO `%d' gpio_direction_output error\n", gpio);
+	if (gpio_direction_output(gpio_pin, 1)) {
+		printf("GPIO `%u' gpio_direction_output error\n", gpio_pin);
 		return;
 	}
 }
