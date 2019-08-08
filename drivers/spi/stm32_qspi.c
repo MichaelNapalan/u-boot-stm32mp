@@ -473,7 +473,6 @@ static int _stm32_qspi_xfer(struct stm32_qspi_priv *priv,
 				i = 0;
 				while (words > i) {
 					writeb(dout[i], &priv->regs->dr);
-					udelay(1);
 					debug("%02x ", dout[i]);
 					i++;
 				}
@@ -507,7 +506,6 @@ static int _stm32_qspi_xfer(struct stm32_qspi_priv *priv,
 		i = 0;
 		while (words > i) {
 			din[i] = readb(&priv->regs->dr);
-			udelay(1);
 			debug("%02x ", din[i]);
 			i++;
 		}
