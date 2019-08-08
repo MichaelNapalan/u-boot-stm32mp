@@ -12,6 +12,10 @@
 #include <dt-bindings/memory/stm32-sdram.h>
 #include <ubifs_uboot.h>
 #include <ubi_uboot.h>
+#ifdef CONFIG_SPLASH_SCREEN
+#include <splash.h>
+#include <video.h>
+#endif
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -80,6 +84,30 @@ static void dts_fixup(struct udevice *dev)
 		mem[1] = 0x4;
 	}
 }
+
+#ifdef CONFIG_SPLASH_SCREEN
+static int splash_screen_display(void)
+{
+#ifdef CONFIG_DM_VIDEO
+	struct udevice *dev;
+#endif
+	int res = 0;
+	ulong addr = CONFIG_SYS_LOAD_ADDR;
+
+	res = ubi_volume_read("splash", (char *)addr, 0);
+	if (res) {
+		printf("%s: ubi_volume_read error=%d\n", __func__, res);
+		return res;
+	}
+#ifdef CONFIG_DM_VIDEO
+	res = uclass_first_device_err(UCLASS_VIDEO, &dev);
+	if (!res) {
+		res = video_bmp_display(dev, addr, 0, 0, false);
+	}
+#endif
+	return res;
+}
+#endif
 
 int dram_init(void)
 {
@@ -156,6 +184,9 @@ static void prepare_abi(void)
 
 int board_late_init(void)
 {
+#ifdef CONFIG_SPLASH_SCREEN
+	splash_screen_display();
+#endif
 	custom_gpio_setup();
 #ifndef CONFIG_SPL_BUILD
 	/* Function table is located at the start of ITCM */

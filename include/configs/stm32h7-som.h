@@ -23,6 +23,19 @@
 #define CONFIG_SYS_MAX_FLASH_BANKS	1
 #define CONFIG_SYS_FLASH_SECT_SIZE	0x20000		/* 128 KB */
 
+/* For splashcreen */
+#ifdef CONFIG_DM_VIDEO
+#define CONFIG_VIDEO_BMP_RLE8
+#define CONFIG_BMP_16BPP
+#define CONFIG_BMP_24BPP
+#define CONFIG_BMP_32BPP
+#undef CONFIG_VIDEO_STM32_MAX_BPP
+#define CONFIG_VIDEO_STM32_MAX_BPP	32
+#define CONFIG_FB_ADDR			0xD0000000
+#define CONFIG_SPLASH_SCREEN
+#define CONFIG_SPLASH_SCREEN_ALIGN
+#endif
+
 #define CONFIG_ENV_SIZE			(0x4000)
 
 /* environment organization */

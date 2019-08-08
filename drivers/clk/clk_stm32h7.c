@@ -23,6 +23,10 @@
 #define RCC_CR_HSEBYP			BIT(18)
 #define RCC_CR_PLL1ON			BIT(24)
 #define RCC_CR_PLL1RDY			BIT(25)
+#define RCC_CR_PLL2ON			BIT(26)
+#define RCC_CR_PLL2RDY			BIT(27)
+#define RCC_CR_PLL3ON			BIT(28)
+#define RCC_CR_PLL3RDY			BIT(29)
 
 #define RCC_CR_HSIDIV_MASK		GENMASK(4, 3)
 #define RCC_CR_HSIDIV_SHIFT		3
@@ -66,6 +70,58 @@
 #define RCC_PLLCFGR_DIVP1EN		BIT(16)
 #define RCC_PLLCFGR_DIVQ1EN		BIT(17)
 #define RCC_PLLCFGR_DIVR1EN		BIT(18)
+
+#define RCC_PLLCKSELR_DIVM2_SHIFT	12
+#define RCC_PLLCKSELR_DIVM2_MASK	GENMASK(17, 12)
+
+#define RCC_PLL2DIVR_DIVN2_MASK		GENMASK(8, 0)
+
+#define RCC_PLL2DIVR_DIVP2_SHIFT	9
+#define RCC_PLL2DIVR_DIVP2_MASK		GENMASK(15, 9)
+
+#define RCC_PLL2DIVR_DIVQ2_SHIFT	16
+#define RCC_PLL2DIVR_DIVQ2_MASK		GENMASK(22, 16)
+
+#define RCC_PLL2DIVR_DIVR2_SHIFT	24
+#define RCC_PLL2DIVR_DIVR2_MASK		GENMASK(20, 24)
+
+#define RCC_PLL2FRACR_FRACN2_SHIFT	3
+#define RCC_PLL2FRACR_FRACN2_MASK	GENMASK(15, 3)
+
+#define RCC_PLLCFGR_PLL2RGE_SHIFT	6
+#define		PLL2RGE_1_2_MHZ		0
+#define		PLL2RGE_2_4_MHZ		1
+#define		PLL2RGE_4_8_MHZ		2
+#define		PLL2RGE_8_16_MHZ	3
+#define RCC_PLLCFGR_DIVP2EN		BIT(19)
+#define RCC_PLLCFGR_DIVQ2EN		BIT(20)
+#define RCC_PLLCFGR_DIVR2EN		BIT(21)
+
+#define RCC_PLLCKSELR_DIVM3_SHIFT	20
+#define RCC_PLLCKSELR_DIVM3_MASK	GENMASK(25, 20)
+
+#define RCC_PLL3DIVR_DIVN3_MASK		GENMASK(8, 0)
+
+#define RCC_PLL3DIVR_DIVP3_SHIFT	9
+#define RCC_PLL3DIVR_DIVP3_MASK		GENMASK(15, 9)
+
+#define RCC_PLL3DIVR_DIVQ3_SHIFT	16
+#define RCC_PLL3DIVR_DIVQ3_MASK		GENMASK(22, 16)
+
+#define RCC_PLL3DIVR_DIVR3_SHIFT	24
+#define RCC_PLL3DIVR_DIVR3_MASK		GENMASK(30, 24)
+
+#define RCC_PLL3FRACR_FRACN3_SHIFT	3
+#define RCC_PLL3FRACR_FRACN3_MASK	GENMASK(15, 3)
+
+#define RCC_PLLCFGR_PLL3RGE_SHIFT	10
+#define		PLL3RGE_1_2_MHZ		0
+#define		PLL3RGE_2_4_MHZ		1
+#define		PLL3RGE_4_8_MHZ		2
+#define		PLL3RGE_8_16_MHZ	3
+#define RCC_PLLCFGR_DIVP3EN		BIT(22)
+#define RCC_PLLCFGR_DIVQ3EN		BIT(23)
+#define RCC_PLLCFGR_DIVR3EN		BIT(24)
 
 #define RCC_D1CFGR_HPRE_MASK		GENMASK(3, 0)
 #define RCC_D1CFGR_HPRE_DIVIDED		BIT(3)
@@ -337,6 +393,24 @@ struct pll_psc sys_pll_psc = {
 	.divr = 2,
 };
 
+#if 0
+struct pll_psc sys_pll3_psc = {
+	.divm = 5,
+	.divn = 160,
+	.divp = 2,
+	.divq = 2,
+	.divr = 67,
+};
+#else
+struct pll_psc sys_pll3_psc = {
+	.divm = 4,
+	.divn = 80,
+	.divp = 2,
+	.divq = 2,
+	.divr = 42,
+};
+#endif
+
 enum apb {
 	APB1,
 	APB2,
@@ -421,6 +495,26 @@ int configure_clocks(struct udevice *dev)
 	/* sdram: use pll1_q as fmc_k clk */
 	clrsetbits_le32(&regs->d1ccipr, RCC_D1CCIPR_FMCSRC_MASK,
 			FMCSRC_PLL1_Q_CK);
+
+	/* Select HSE as PLL clock source */
+	pllckselr = RCC_PLLCKSELR_PLLSRC_HSE;
+	pllckselr |= sys_pll3_psc.divm << RCC_PLLCKSELR_DIVM3_SHIFT;
+	writel(pllckselr, &regs->pllckselr);
+
+	pll1divr |= (sys_pll3_psc.divr - 1) << RCC_PLL3DIVR_DIVR3_SHIFT;
+	pll1divr |= (sys_pll3_psc.divq - 1) << RCC_PLL3DIVR_DIVQ3_SHIFT;
+	pll1divr |= (sys_pll3_psc.divp - 1) << RCC_PLL3DIVR_DIVP3_SHIFT;
+	pll1divr |= (sys_pll3_psc.divn - 1);
+	writel(pll1divr, &regs->pll3divr);
+
+	pllcfgr |= PLL3RGE_8_16_MHZ << RCC_PLLCFGR_PLL3RGE_SHIFT;
+	pllcfgr |= RCC_PLLCFGR_DIVP3EN;
+	pllcfgr |= RCC_PLLCFGR_DIVQ3EN;
+	pllcfgr |= RCC_PLLCFGR_DIVR3EN;
+	writel(pllcfgr, &regs->pllcfgr);
+
+	/* pll setup, enable it */
+	setbits_le32(&regs->cr, RCC_CR_PLL3ON);
 
 	return 0;
 }
@@ -770,6 +864,11 @@ static ulong stm32_clk_get_rate(struct clk *clk)
 	}
 }
 
+static ulong stm32_clk_set_rate(struct clk *clk, ulong rate)
+{
+	return rate;
+}
+
 static int stm32_clk_enable(struct clk *clk)
 {
 	struct stm32_clk *priv = dev_get_priv(clk->dev);
@@ -859,6 +958,7 @@ static struct clk_ops stm32_clk_ops = {
 	.of_xlate	= stm32_clk_of_xlate,
 	.enable		= stm32_clk_enable,
 	.get_rate	= stm32_clk_get_rate,
+	.set_rate	= stm32_clk_set_rate,
 };
 
 U_BOOT_DRIVER(stm32h7_clk) = {

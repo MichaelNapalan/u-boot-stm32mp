@@ -396,8 +396,13 @@ static int stm32_ltdc_probe(struct udevice *dev)
 	      priv->timing.pixelclock.typ, rate);
 
 	/* TODO Below parameters are hard-coded for the moment... */
+#if (CONFIG_VIDEO_STM32_MAX_BPP == 32)
+	priv->l2bpp = VIDEO_BPP32;
+	priv->bg_col_argb = 0xFFFFFFFF;
+#else
 	priv->l2bpp = VIDEO_BPP16;
 	priv->bg_col_argb = 0xFFFFFFFF; /* white no transparency */
+#endif
 	priv->crop_x = 0;
 	priv->crop_y = 0;
 	priv->crop_w = priv->timing.hactive.typ;
@@ -421,7 +426,6 @@ static int stm32_ltdc_probe(struct udevice *dev)
 	uc_priv->bpix = priv->l2bpp;
 
 	video_set_flush_dcache(dev, true);
-
 	return 0;
 }
 

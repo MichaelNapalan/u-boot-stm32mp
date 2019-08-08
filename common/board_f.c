@@ -412,11 +412,19 @@ static int reserve_video(void)
 	ulong addr;
 	int ret;
 
+#ifdef CONFIG_FB_ADDR
+	addr = CONFIG_FB_ADDR + (CONFIG_VIDEO_STM32_MAX_XRES * \
+				CONFIG_VIDEO_STM32_MAX_YRES * \
+				(CONFIG_VIDEO_STM32_MAX_BPP >> 3));
+#else
 	addr = gd->relocaddr;
+#endif
 	ret = video_reserve(&addr);
 	if (ret)
 		return ret;
+#ifndef CONFIG_FB_ADDR
 	gd->relocaddr = addr;
+#endif
 #elif defined(CONFIG_LCD)
 #  ifdef CONFIG_FB_ADDR
 	gd->fb_base = CONFIG_FB_ADDR;

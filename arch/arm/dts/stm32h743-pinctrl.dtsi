@@ -303,6 +303,44 @@
 					slew-rate = <2>;
 				};
 			};
+
+			ltdc_pins: ltdc@0 {
+				pins {
+					pinmux = <STM32H7_PI12_FUNC_LCD_HSYNC>,
+						 <STM32H7_PI13_FUNC_LCD_VSYNC>,
+						 <STM32H7_PI14_FUNC_LCD_CLK>,
+						 <STM32H7_PI15_FUNC_LCD_R0>,
+						 <STM32H7_PJ0_FUNC_LCD_R1>,
+						 <STM32H7_PJ1_FUNC_LCD_R2>,
+						 <STM32H7_PJ2_FUNC_LCD_R3>,
+						 <STM32H7_PJ3_FUNC_LCD_R4>,
+						 <STM32H7_PJ4_FUNC_LCD_R5>,
+						 <STM32H7_PJ5_FUNC_LCD_R6>,
+						 <STM32H7_PJ6_FUNC_LCD_R7>,
+						 <STM32H7_PJ7_FUNC_LCD_G0>,
+						 <STM32H7_PJ8_FUNC_LCD_G1>,
+						 <STM32H7_PJ9_FUNC_LCD_G2>,
+						 <STM32H7_PJ10_FUNC_LCD_G3>,
+						 <STM32H7_PJ11_FUNC_LCD_G4>,
+						 <STM32H7_PJ12_FUNC_LCD_B0>,
+						 <STM32H7_PJ13_FUNC_LCD_B1>,
+						 <STM32H7_PJ14_FUNC_LCD_B2>,
+						 <STM32H7_PJ15_FUNC_LCD_B3>,
+						 <STM32H7_PK0_FUNC_LCD_G5>,
+						 <STM32H7_PK1_FUNC_LCD_G6>,
+						 <STM32H7_PK2_FUNC_LCD_G7>,
+						 <STM32H7_PK3_FUNC_LCD_B4>,
+						 <STM32H7_PK4_FUNC_LCD_B5>,
+						 <STM32H7_PK5_FUNC_LCD_B6>,
+						 <STM32H7_PK6_FUNC_LCD_B7>,
+						 <STM32H7_PK7_FUNC_LCD_DE>;
+					slew-rate = <0>;
+				};
+				pins2 {
+					pinmux = <STM32H7_PA8_FUNC_GPIO>;
+					slew-rate = <0>;
+				};
+			};
 		};
 	};
 };
