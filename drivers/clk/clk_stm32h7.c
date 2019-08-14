@@ -385,6 +385,7 @@ struct pll_psc {
  * VCO = 500MHz
  * pll1_p = 250MHz / pll1_q = 250MHz pll1_r = 250Mhz
  */
+#ifndef CONFIG_TARGET_STM32H7_SOM
 struct pll_psc sys_pll_psc = {
 	.divm = 4,
 	.divn = 80,
@@ -392,22 +393,27 @@ struct pll_psc sys_pll_psc = {
 	.divq = 2,
 	.divr = 2,
 };
-
-#if 0
-struct pll_psc sys_pll3_psc = {
-	.divm = 5,
-	.divn = 160,
-	.divp = 2,
-	.divq = 2,
-	.divr = 67,
-};
-#else
 struct pll_psc sys_pll3_psc = {
 	.divm = 4,
 	.divn = 80,
 	.divp = 2,
 	.divq = 2,
 	.divr = 42,
+};
+#else
+struct pll_psc sys_pll_psc = {
+	.divm = 5,
+	.divn = 160,
+	.divp = 2,
+	.divq = 4,
+	.divr = 2,
+};
+struct pll_psc sys_pll3_psc = {
+	.divm = 5,
+	.divn = 48,
+	.divp = 2,
+	.divq = 5,
+	.divr = 20,
 };
 #endif
 
