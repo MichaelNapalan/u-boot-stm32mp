@@ -76,6 +76,7 @@ static int simple_panel_ofdata_to_platdata(struct udevice *dev)
 		if (ret != -ENOENT)
 			return log_ret(ret);
 	}
+	dm_gpio_set_value(&priv->enable, 1);
 
 	return 0;
 }

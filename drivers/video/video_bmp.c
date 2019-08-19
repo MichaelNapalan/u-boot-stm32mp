@@ -330,7 +330,11 @@ int video_bmp_display(struct udevice *dev, ulong bmp_image, int x, int y,
 					*(fb++) = *(bmap++);
 					*(fb++) = *(bmap++);
 					*(fb++) = *(bmap++);
+#ifdef CONFIG_TARGET_STM32H7_SOM
+					*(fb++) = 0xFF;
+#else
 					*(fb++) = 0;
+#endif
 				}
 			}
 			fb -= priv->line_length + width * (bpix / 8);

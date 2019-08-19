@@ -3,6 +3,7 @@
 assign tty          \%1
 assign img          \%2
 assign rtos_img     \%3
+assign splash_img   \%4
 assign loadaddr     0x24000FC0
 assign copyaddr     0x30000000
 assign entry        0x240013FD
@@ -71,6 +72,15 @@ INPUT 60 {\{13}\{10}\m(uboot_prompt)}
 IF FAIL EXIT 1 loadb timeout
 
 OUTPUT ubi write $loadaddr rtos1 $filesize \{13}
+INPUT 30 {\{13}\{10}\m(uboot_prompt)}
+IF FAIL EXIT 1 writing rtos image to UBI
+
+OUTPUT loadb \{13}
+send \m(splash_img)
+INPUT 60 {\{13}\{10}\m(uboot_prompt)}
+IF FAIL EXIT 1 loadb timeout
+
+OUTPUT ubi write $loadaddr splash $filesize \{13}
 INPUT 30 {\{13}\{10}\m(uboot_prompt)}
 IF FAIL EXIT 1 writing rtos image to UBI
 

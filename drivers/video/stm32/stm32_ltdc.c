@@ -369,12 +369,14 @@ static int stm32_ltdc_probe(struct udevice *dev)
 		return ret;
 	}
 
+#ifndef CONFIG_TARGET_STM32H7_SOM
 	ret = panel_enable_backlight(panel);
 	if (ret) {
 		debug("%s: panel %s enable backlight error %d\n",
 		      __func__, panel->name, ret);
 		return ret;
 	}
+#endif
 
 	ret = fdtdec_decode_display_timing(gd->fdt_blob,
 					   dev_of_offset(dev), 0,
@@ -398,7 +400,7 @@ static int stm32_ltdc_probe(struct udevice *dev)
 	/* TODO Below parameters are hard-coded for the moment... */
 #if (CONFIG_VIDEO_STM32_MAX_BPP == 32)
 	priv->l2bpp = VIDEO_BPP32;
-	priv->bg_col_argb = 0xFFFFFFFF;
+	priv->bg_col_argb = 0;
 #else
 	priv->l2bpp = VIDEO_BPP16;
 	priv->bg_col_argb = 0xFFFFFFFF; /* white no transparency */

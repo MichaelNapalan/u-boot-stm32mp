@@ -15,6 +15,7 @@
 #ifdef CONFIG_SPLASH_SCREEN
 #include <splash.h>
 #include <video.h>
+#include <panel.h>
 #endif
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -101,8 +102,17 @@ static int splash_screen_display(void)
 	}
 #ifdef CONFIG_DM_VIDEO
 	res = uclass_first_device_err(UCLASS_VIDEO, &dev);
-	if (!res) {
-		res = video_bmp_display(dev, addr, 0, 0, false);
+	if (res) {
+		printf("%s: uclass_first_device_err error=%d\n", __func__, res);
+		return res;
+	}
+	video_bmp_display(dev, addr, 0, 0, false);
+
+	uclass_first_device(UCLASS_PANEL, &dev);
+	res = panel_enable_backlight(dev);
+	if (res) {
+		printf("%s: panel %s enable backlight error %d\n", __func__, dev->name, res);
+		return res;
 	}
 #endif
 	return res;
