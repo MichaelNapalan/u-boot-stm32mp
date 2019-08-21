@@ -21,16 +21,33 @@ DECLARE_GLOBAL_DATA_PTR;
 #ifdef CONFIG_SYS_REDUNDAND_ENVIRONMENT
 static int env_ubi_save(void)
 {
+#ifdef CONFIG_TARGET_STM32H7_SOM
+	env_t * env_new = malloc(sizeof(env_t));
+#else
 	ALLOC_CACHE_ALIGN_BUFFER(env_t, env_new, 1);
+#endif
 	int ret;
 
+#ifdef CONFIG_TARGET_STM32H7_SOM
+	if (env_new == NULL) {
+		__set_errno(ENOMEM);
+		return -1;
+	}
+#endif
 	ret = env_export(env_new);
-	if (ret)
+	if (ret) {
+#ifdef CONFIG_TARGET_STM32H7_SOM
+		free(env_new);
+#endif
 		return ret;
+	}
 
 	if (ubi_part(CONFIG_ENV_UBI_PART, NULL)) {
 		printf("\n** Cannot find mtd partition \"%s\"\n",
 		       CONFIG_ENV_UBI_PART);
+#ifdef CONFIG_TARGET_STM32H7_SOM
+		free(env_new);
+#endif
 		return 1;
 	}
 
@@ -41,6 +58,9 @@ static int env_ubi_save(void)
 			printf("\n** Unable to write env to %s:%s **\n",
 			       CONFIG_ENV_UBI_PART,
 			       CONFIG_ENV_UBI_VOLUME_REDUND);
+#ifdef CONFIG_TARGET_STM32H7_SOM
+			free(env_new);
+#endif
 			return 1;
 		}
 	} else {
@@ -50,10 +70,16 @@ static int env_ubi_save(void)
 			printf("\n** Unable to write env to %s:%s **\n",
 			       CONFIG_ENV_UBI_PART,
 			       CONFIG_ENV_UBI_VOLUME);
+#ifdef CONFIG_TARGET_STM32H7_SOM
+			free(env_new);
+#endif
 			return 1;
 		}
 	}
 
+#ifdef CONFIG_TARGET_STM32H7_SOM
+	free(env_new);
+#endif
 	puts("done\n");
 
 	gd->env_valid = gd->env_valid == ENV_REDUND ? ENV_VALID : ENV_REDUND;
@@ -63,16 +89,33 @@ static int env_ubi_save(void)
 #else /* ! CONFIG_SYS_REDUNDAND_ENVIRONMENT */
 static int env_ubi_save(void)
 {
+#ifdef CONFIG_TARGET_STM32H7_SOM
+	env_t * env_new = malloc(sizeof(env_t));
+#else
 	ALLOC_CACHE_ALIGN_BUFFER(env_t, env_new, 1);
+#endif
 	int ret;
 
+#ifdef CONFIG_TARGET_STM32H7_SOM
+	if (env_new == NULL) {
+		__set_errno(ENOMEM);
+		return -1;
+	}
+#endif
 	ret = env_export(env_new);
-	if (ret)
+	if (ret) {
+#ifdef CONFIG_TARGET_STM32H7_SOM
+		free(env_new);
+#endif
 		return ret;
+	}
 
 	if (ubi_part(CONFIG_ENV_UBI_PART, NULL)) {
 		printf("\n** Cannot find mtd partition \"%s\"\n",
 		       CONFIG_ENV_UBI_PART);
+#ifdef CONFIG_TARGET_STM32H7_SOM
+		free(env_new);
+#endif
 		return 1;
 	}
 
@@ -80,9 +123,15 @@ static int env_ubi_save(void)
 			     CONFIG_ENV_SIZE)) {
 		printf("\n** Unable to write env to %s:%s **\n",
 		       CONFIG_ENV_UBI_PART, CONFIG_ENV_UBI_VOLUME);
+#ifdef CONFIG_TARGET_STM32H7_SOM
+		free(env_new);
+#endif
 		return 1;
 	}
 
+#ifdef CONFIG_TARGET_STM32H7_SOM
+	free(env_new);
+#endif
 	puts("done\n");
 	return 0;
 }

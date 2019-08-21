@@ -12,6 +12,7 @@
 #include <dt-bindings/memory/stm32-sdram.h>
 #include <ubifs_uboot.h>
 #include <ubi_uboot.h>
+#include <environment.h>
 #ifdef CONFIG_SPLASH_SCREEN
 #include <splash.h>
 #include <video.h>
@@ -182,6 +183,9 @@ struct uboot_abi {
 	int (*ubifs_mkdir)(const char *filename);
 	int (*ubifs_rmdir)(const char *filename);
 	int (*ubifs_unlink)(const char *filename);
+	char * (*getenv)(const char *varname);
+	int (*setenv)(const char *varname, const char *value);
+	int (*saveenv)(void);
 };
 
 static void prepare_abi(void)
@@ -215,6 +219,9 @@ int board_late_init(void)
 	s->ubifs_mkdir = ubifs_mkdir;
 	s->ubifs_rmdir = ubifs_rmdir;
 	s->ubifs_unlink = ubifs_unlink;
+	s->getenv = env_get;
+	s->setenv = env_set;
+	s->saveenv = env_save;
 #endif
 	return 0;
 }
