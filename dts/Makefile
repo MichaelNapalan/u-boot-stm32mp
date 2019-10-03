@@ -19,8 +19,15 @@ endif
 $(obj)/dt-spl.dtb: $(DTB) $(objtree)/tools/fdtgrep FORCE
 	$(call if_changed,fdtgrep)
 
+quiet_cmd_add_keys = DTB     $@
+      cmd_add_keys = cat $< > $@ | mkimage -f $(obj)/dummy.its $(obj)/dummy.fit -k $(CONFIG_FIT_EMBED_SIG_KEYS) -r -K $@
+
 $(obj)/dt.dtb: $(DTB) FORCE
+ifneq ($(CONFIG_FIT_EMBED_SIG_KEYS),"")
+	$(call if_changed,add_keys)
+else
 	$(call if_changed,shipped)
+endif
 
 targets += dt.dtb dt-spl.dtb
 

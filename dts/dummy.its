@@ -1,0 +1,32 @@
+/* Dummy its to invoke mkimage to add signature keys to the U-Boot's dtb */
+/dts-v1/;
+
+/ {
+	#address-cells = <1>;
+	images {
+		fdt {
+			description = "Dummy Image";
+			data = /incbin/("dummy.its");
+			type = "flat_dt";
+			arch = "arm";
+			compression = "none";
+			fdt-version = <1>;
+			hash-1 {
+				algo = "sha1";
+			};
+		};
+	};
+
+	configurations {
+		default = "config-1";
+		config-1 {
+			description = "Dummy Image";
+			fdt = "fdt";
+			signature {
+				algo = "sha1,rsa2048";
+				key-name-hint = "dev";
+				sign-images = "fdt";
+			};
+		};
+	};
+};
