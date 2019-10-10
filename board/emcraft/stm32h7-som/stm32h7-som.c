@@ -186,6 +186,7 @@ struct uboot_abi {
 	char * (*getenv)(const char *varname);
 	int (*setenv)(const char *varname, const char *value);
 	int (*saveenv)(void);
+	int (*ubi_volume_write)(char *volume, void *buf, size_t size);
 };
 
 static void prepare_abi(void)
@@ -222,6 +223,7 @@ int board_late_init(void)
 	s->getenv = env_get;
 	s->setenv = env_set;
 	s->saveenv = env_save;
+	s->ubi_volume_write = ubi_volume_write;
 #endif
 	return 0;
 }

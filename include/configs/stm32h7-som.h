@@ -75,8 +75,46 @@
 			"fdt_high=0xffffffffffffffff\0"		\
 			"initrd_high=0xffffffffffffffff\0"	\
 			"ramdisk_addr_r=0xD0900000\0"		\
-			"bootcmd=ubi read $loadaddr rtos1 && bootm\0" \
-			CONFIG_MTDPARTS_DEFAULT "\0" 		\
+			"bootcmd=run reliable_boot;"			\
+			" if test x$upgrade_available = x1; then reset; fi" \
+			"\0"						\
+									\
+			"altbootcmd=run reliable_altboot\0"		\
+									\
+			"ubiboot=ubi read $loadaddr rtos$boot_num && bootm\0" \
+									\
+			"reliable_boot="				\
+			" setenv boot_num 0;"				\
+			" if test x$boot2_active != x1 -a x$boot1_valid = x1; then" \
+			"   setenv boot_num 1;"				\
+			" fi;"						\
+			" if test x$boot2_active  = x1 -a x$boot2_valid = x1; then" \
+			"   setenv boot_num 2;"				\
+			" fi;"						\
+			" if test x$boot_num != x0; then"		\
+			"   echo \"Booting Image #${boot_num}\";"	\
+			"   run ubiboot ||"				\
+			"       echo ERROR: ubiboot($boot_num) failed;" \
+			" else"						\
+			"   echo ERROR: Active image set is invalid;"	\
+			" fi;"						\
+			"\0"						\
+									\
+			"reliable_altboot="				\
+			" if test x$boot2_active != x1; then"		\
+			"   setenv boot2_active 1;"			\
+			"   setenv boot1_valid 0;"			\
+			" else"						\
+			"   setenv boot2_active 0;"			\
+			"   setenv boot2_valid 0;"			\
+			" fi;"						\
+			" setenv upgrade_available 0;"			\
+			" setenv bootcount 0;"				\
+			" saveenv;"					\
+			" reset;"					\
+			"\0"						\
+									\
+			CONFIG_MTDPARTS_DEFAULT "\0"			\
 			BOOTENV
 /*
  * Command line configuration.
