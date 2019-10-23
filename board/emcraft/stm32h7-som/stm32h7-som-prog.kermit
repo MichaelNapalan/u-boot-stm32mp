@@ -156,7 +156,7 @@ INPUT 60 {\{13}\{10}\m(spl_msg)}
 IF FAIL EXIT 1 spl timeout
 
 # wait for U-Boot prompt
-INPUT 2 {\{13}\{10}\m(uboot_msg)}
+INPUT 5 {\{13}\{10}\m(uboot_msg)}
 IF FAIL boot_uboot
 
 OUTPUT \m(uboot_key)
