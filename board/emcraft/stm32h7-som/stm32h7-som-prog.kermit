@@ -57,7 +57,7 @@ define prog_uboot {
        INPUT 60 {\{13}\{10}\m(uboot_prompt)}
        IF FAIL EXIT 1 loadb timeout
 
-       OUTPUT mtd erase u-boot && mtd write u-boot $loadaddr 0 $filesize \{13}
+       OUTPUT mtd erase spi-nand0 && mtd write u-boot $loadaddr 0 $filesize \{13}
        INPUT 30 {\{13}\{10}\m(uboot_prompt)}
        IF FAIL EXIT 1 erase/write timeout
 
