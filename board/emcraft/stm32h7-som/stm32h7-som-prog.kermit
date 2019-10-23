@@ -11,8 +11,8 @@ assign flash_start  0x00000000
 assign flash_end    0x00060000
 assign flash_size   0x40000
 assign env_vol_size 0x8000
-assign rtos_vol_size 0x10000
-assign splash_vol_size 0x20000
+assign rtos_vol_size 0x400000
+assign splash_vol_size 0x200000
 assign spl_msg      {Hit 's' key to enter spl shell: }
 assign spl_key      {s}
 assign spl_prompt   {spl-> }
