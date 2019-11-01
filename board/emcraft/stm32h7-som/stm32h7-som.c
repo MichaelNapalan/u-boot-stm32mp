@@ -235,20 +235,6 @@ int board_init(void)
 }
 
 #ifdef CONFIG_SPL_BUILD
-static int spl_dram_init(void)
-{
-	struct udevice *dev;
-	int rv;
-
-	rv = uclass_get_device(UCLASS_RAM, 0, &dev);
-	if (rv) {
-		debug("DRAM init failed: %d\n", rv);
-		return rv;
-	}
-	if (fdtdec_setup_mem_size_base() != 0)
-		rv = -EINVAL;
-	return rv;
-}
 
 void spl_board_init(void)
 {
@@ -257,7 +243,7 @@ void spl_board_init(void)
 	/* configure mpu for sdram rw permissions */
 	arch_cpu_init();
 	/* DDR initialization */
-	spl_dram_init();
+	dram_init();
 	dram_init_banksize();
 }
 

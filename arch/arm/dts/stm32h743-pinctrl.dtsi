@@ -178,6 +178,7 @@
 
 			fmc_pins: fmc@0 {
 				  pins {
+					  u-boot,dm-spl;
 					  pinmux = <STM32H7_PD0_FUNC_FMC_D2_FMC_DA2>,
 						  <STM32H7_PD1_FUNC_FMC_D3_FMC_DA3>,
 						  <STM32H7_PD8_FUNC_FMC_D13_FMC_DA13>,
