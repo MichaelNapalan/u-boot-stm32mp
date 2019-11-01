@@ -429,6 +429,7 @@ int configure_clocks(struct udevice *dev)
 	uint8_t *pwr_base = (uint8_t *)regmap_get_range(priv->pwr_regmap, 0);
 	uint32_t pllckselr = 0;
 	uint32_t pll1divr = 0;
+	uint32_t pll3divr = 0;
 	uint32_t pllcfgr = 0;
 
 	/* Switch on HSI */
@@ -507,11 +508,11 @@ int configure_clocks(struct udevice *dev)
 	pllckselr |= sys_pll3_psc.divm << RCC_PLLCKSELR_DIVM3_SHIFT;
 	writel(pllckselr, &regs->pllckselr);
 
-	pll1divr |= (sys_pll3_psc.divr - 1) << RCC_PLL3DIVR_DIVR3_SHIFT;
-	pll1divr |= (sys_pll3_psc.divq - 1) << RCC_PLL3DIVR_DIVQ3_SHIFT;
-	pll1divr |= (sys_pll3_psc.divp - 1) << RCC_PLL3DIVR_DIVP3_SHIFT;
-	pll1divr |= (sys_pll3_psc.divn - 1);
-	writel(pll1divr, &regs->pll3divr);
+	pll3divr |= (sys_pll3_psc.divr - 1) << RCC_PLL3DIVR_DIVR3_SHIFT;
+	pll3divr |= (sys_pll3_psc.divq - 1) << RCC_PLL3DIVR_DIVQ3_SHIFT;
+	pll3divr |= (sys_pll3_psc.divp - 1) << RCC_PLL3DIVR_DIVP3_SHIFT;
+	pll3divr |= (sys_pll3_psc.divn - 1);
+	writel(pll3divr, &regs->pll3divr);
 
 	pllcfgr |= PLL3RGE_8_16_MHZ << RCC_PLLCFGR_PLL3RGE_SHIFT;
 	pllcfgr |= RCC_PLLCFGR_DIVP3EN;
