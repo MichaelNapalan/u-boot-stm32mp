@@ -57,7 +57,7 @@ define prog_uboot {
        INPUT 60 {\{13}\{10}\m(uboot_prompt)}
        IF FAIL EXIT 1 loadb timeout
 
-       OUTPUT mtd erase spi-nand0 && mtd write u-boot $loadaddr 0 $filesize \{13}
+       OUTPUT mtd erase u-boot && mtd write u-boot $loadaddr 0 $filesize \{13}
        INPUT 30 {\{13}\{10}\m(uboot_prompt)}
        IF FAIL EXIT 1 erase/write timeout
 
@@ -69,31 +69,43 @@ define create_ubi {
        INPUT 30 {\{13}\{10}\m(uboot_prompt)}
        IF FAIL EXIT 1 create env
 
+       # Delete env and rtos UBI volumes
+
+       OUTPUT ubi remove env1 \{13}
+       INPUT 30 {\{13}\{10}\m(uboot_prompt)}
+       IF FAIL EXIT 1 remove env
+
+       OUTPUT ubi remove env2 \{13}
+       INPUT 30 {\{13}\{10}\m(uboot_prompt)}
+       IF FAIL EXIT 1 remove env
+
+       OUTPUT ubi remove rtos1 \{13}
+       INPUT 30 {\{13}\{10}\m(uboot_prompt)}
+       IF FAIL EXIT 1 remove rtos
+
+       OUTPUT ubi remove rtos2 \{13}
+       INPUT 30 {\{13}\{10}\m(uboot_prompt)}
+       IF FAIL EXIT 1 remove rtos
+
        # create env UBI volumes
 
-       OUTPUT ubi check env1 || ubi create env1 \m(env_vol_size) \{13}
+       OUTPUT ubi create env1 \m(env_vol_size) \{13}
        INPUT 30 {\{13}\{10}\m(uboot_prompt)}
        IF FAIL EXIT 1 create env
 
-       OUTPUT ubi check env2 || ubi create env2 \m(env_vol_size) \{13}
+       OUTPUT ubi create env2 \m(env_vol_size) \{13}
        INPUT 30 {\{13}\{10}\m(uboot_prompt)}
        IF FAIL EXIT 1 create env
 
        # create rtos UBI volumes
 
-       OUTPUT ubi check rtos1 || ubi create rtos1 \m(rtos_vol_size) \{13}
+       OUTPUT ubi create rtos1 \m(rtos_vol_size) \{13}
        INPUT 30 {\{13}\{10}\m(uboot_prompt)}
        IF FAIL EXIT 1 create rtos volumes
 
-       OUTPUT ubi check rtos2 || ubi create rtos2 \m(rtos_vol_size) \{13}
+       OUTPUT ubi create rtos2 \m(rtos_vol_size) \{13}
        INPUT 30 {\{13}\{10}\m(uboot_prompt)}
        IF FAIL EXIT 1 create rtos volumes
-
-       # create splash volume
-
-       OUTPUT ubi check splash || ubi create splash \m(splash_vol_size) \{13}
-       INPUT 30 {\{13}\{10}\m(uboot_prompt)}
-       IF FAIL EXIT 1 create splash volume
 }
 
 define prog_rtos {
@@ -154,10 +166,12 @@ echo {Reset the board to start programming "\m(img)" via "\m(tty)"}
 # wait for board reset
 INPUT 60 {\{13}\{10}\m(spl_msg)}
 IF FAIL EXIT 1 spl timeout
+OUTPUT \m(spl_key)
 
-# wait for U-Boot prompt
-INPUT 5 {\{13}\{10}\m(uboot_msg)}
-IF FAIL boot_uboot
+# wait for SPL U-Boot prompt
+INPUT 2 {\{13}\{10}\m(spl_prompt)}
+IF FAIL EXIT 1 spl prompt timeout
+boot_uboot
 
 OUTPUT \m(uboot_key)
 INPUT 2 {\{13}\{10}\m(uboot_prompt)}
@@ -166,17 +180,27 @@ IF FAIL EXIT 1 u-boot prompt timeout
 # load and program main U-Boot
 prog_uboot
 
-# create UBI volumes
-create_ubi
-
 # check args for rtos image
 IF NOT DEFINED \%3 reset_target
+
+# create UBI volumes
+create_ubi
 
 # install rtos
 prog_rtos
 
 # check args for splash image
 IF NOT DEFINED \%4 reset_target
+
+# create splash volume
+
+OUTPUT ubi remove splash \{13}
+INPUT 30 {\{13}\{10}\m(uboot_prompt)}
+IF FAIL EXIT 1 remove splash
+
+OUTPUT ubi create splash \m(splash_vol_size) \{13}
+INPUT 30 {\{13}\{10}\m(uboot_prompt)}
+IF FAIL EXIT 1 create splash volume
 
 # install splash screen
 prog_splash
