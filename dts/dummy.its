@@ -2,6 +2,7 @@
 /dts-v1/;
 
 / {
+	description = "Dummy Image";
 	#address-cells = <1>;
 	images {
 		fdt {
