@@ -69,9 +69,11 @@
 /*MMC SD*/
 #define CONFIG_SYS_MMC_MAX_DEVICE	3
 
+#if defined(CONFIG_NAND)
 /* NAND support */
 #define CONFIG_SYS_NAND_ONFI_DETECTION
 #define CONFIG_SYS_MAX_NAND_DEVICE	1
+#endif
 
 /* SPI FLASH support */
 #if defined(CONFIG_SPL_BUILD)
@@ -249,9 +251,25 @@
 	STM32MP_ANDROID \
 	PARTS_DEFAULT \
 	BOOTENV \
-	"boot_net_usb_start=true\0"
+	"boot_net_usb_start=true\0" \
+	"boot_net_usb_start=true\0" \
+	"ethaddr=3C:FB:96:44:44:ac\0" \
+	"ipaddr=172.17.44.114\0" \
+	"serverip=172.17.0.1\0"
 
 #endif /* ifndef CONFIG_SPL_BUILD */
 #endif /* ifdef CONFIG_DISTRO_DEFAULTS*/
+
+
+/*
+ * Env parameters
+ */
+#define CONFIG_SYS_MMC_ENV_DEV		1
+/*
+ * Where the U-Boot environment is stored. Sectors 0-33 are used by GPT.
+ * Partitioning must be done to account some space for the environment.
+ */
+
+#define CONFIG_ENV_OVERWRITE
 
 #endif /* __CONFIG_H */
