@@ -887,7 +887,8 @@ int board_interface_eth_init(struct udevice *dev,
 	case PHY_INTERFACE_MODE_RGMII_ID:
 	case PHY_INTERFACE_MODE_RGMII_RXID:
 	case PHY_INTERFACE_MODE_RGMII_TXID:
-		if (eth_clk_sel_reg)
+		if (eth_clk_sel_reg &&
+			!of_machine_is_compatible("st,stm32mp1-som"))
 			value = SYSCFG_PMCSETR_ETH_SEL_RGMII |
 				SYSCFG_PMCSETR_ETH_CLK_SEL;
 		else
@@ -906,6 +907,32 @@ int board_interface_eth_init(struct udevice *dev,
 	       SYSCFG_PMCSETR_ETH_REF_CLK_SEL | SYSCFG_PMCSETR_ETH_CLK_SEL,
 	       syscfg + SYSCFG_PMCCLRR);
 	writel(value, syscfg + SYSCFG_PMCSETR);
+
+	return 0;
+}
+
+int board_phy_config(struct phy_device *phydev)
+{
+	if (of_machine_is_compatible("st,stm32mp1-som")) {
+		unsigned short val;
+
+		/* enable rgmii rxc skew and phy mode select to RGMII copper */
+		phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x1f);
+		phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, 0x8);
+
+		phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x05);
+		phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, 0x100);
+
+		/* Make the phy generate 125MHz clock on CLK_25M output clock */
+		phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x0007);
+		phy_write(phydev, MDIO_DEVAD_NONE, 0xe, 0x8016);
+		phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x4007);
+		val = phy_read(phydev, MDIO_DEVAD_NONE, 0xe);
+		phy_write(phydev, MDIO_DEVAD_NONE, 0xe, val | 0x18);
+
+		if (phydev->drv->config)
+			phydev->drv->config(phydev);
+	}
 
 	return 0;
 }

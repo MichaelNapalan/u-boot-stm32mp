@@ -12,10 +12,8 @@
 		i2c3 = &i2c4;
 		mmc0 = &sdmmc1;
 		mmc1 = &sdmmc2;
-		gpio26 = &stmfx_pinctrl;
 		i2c1 = &i2c2;
 		i2c4 = &i2c5;
-		pinctrl2 = &stmfx_pinctrl;
 		spi0 = &qspi;
 		usb0 = &usbotg_hs;
 	};
@@ -24,8 +22,10 @@
 		u-boot,boot-led = "heartbeat";
 		u-boot,error-led = "error";
 		u-boot,mmc-env-partition = "ssbl";
+#if 0
 		st,fastboot-gpios = <&gpioa 13 GPIO_ACTIVE_LOW>;
 		st,stm32prog-gpios = <&gpioa 14 GPIO_ACTIVE_LOW>;
+#endif
 	};
 
 	led {
@@ -66,10 +66,6 @@
 	pins {
 		u-boot,dm-pre-reloc;
 	};
-};
-
-&pmic {
-	u-boot,dm-pre-reloc;
 };
 
 &rcc {

@@ -1629,11 +1629,15 @@
 			clock-names = "stmmaceth",
 				      "mac-clk-tx",
 				      "mac-clk-rx",
-				      "ethstp";
+				      "ethstp",
+				      "syscfg-clk",
+				      "eth-ck";
 			clocks = <&rcc ETHMAC>,
 				 <&rcc ETHTX>,
 				 <&rcc ETHRX>,
-				 <&rcc ETHSTP>;
+				 <&rcc ETHSTP>,
+				 <&rcc SYSCFG>,
+				 <&rcc ETHCK>;
 			st,syscon = <&syscfg 0x4>;
 			snps,mixed-burst;
 			snps,pbl = <2>;
