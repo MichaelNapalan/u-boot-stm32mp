@@ -386,8 +386,8 @@ static int stm32_usbphyc_probe(struct udevice *dev)
 		ret = stm32_usbphyc_get_regulator(node, "phy-supply",
 						  &usbphyc_phy->vdd);
 		if (ret) {
-			dev_err(dev, "Can't get phy-supply regulator\n");
-			return ret;
+			dev_warn(dev, "Can't get phy-supply regulator\n");
+			usbphyc_phy->vdd = NULL;
 		}
 
 		ret = stm32_usbphyc_get_regulator(node, "vbus-supply",

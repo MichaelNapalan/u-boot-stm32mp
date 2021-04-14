@@ -117,6 +117,7 @@
 		regulator-max-microvolt = <5000000>;
 		regulator-always-on;
 	};
+
 	clocks {
 		clk_ext_camera: clk-ext-camera {
 			#clock-cells = <0>;
@@ -214,6 +215,26 @@
 			regulator-always-on;
 			regulator-boot-on;
 			gpio = <&gpiof 3 GPIO_ACTIVE_HIGH>;
+		};
+
+		usb_host_vbus: usb-host-regulator {
+			compatible = "regulator-fixed";
+			reg = <1>;
+			regulator-name = "usb_host_vbus";
+			regulator-min-microvolt = <5000000>;
+			regulator-max-microvolt = <5000000>;
+			gpio = <&gpiod 14 GPIO_ACTIVE_HIGH>;
+			enable-active-high;
+                };
+
+		usb_otg1_vbus: usb-otg1-regulator {
+			compatible = "regulator-fixed";
+			reg = <1>;
+			regulator-name = "usb_otg1_vbus";
+			regulator-min-microvolt = <5000000>;
+			regulator-max-microvolt = <5000000>;
+			gpio = <&gpioa 15 GPIO_ACTIVE_HIGH>;
+			enable-active-high;
 		};
 	};
 };
@@ -370,13 +391,32 @@
 	status = "okay";
 };
 
+&usbh_ehci {
+	phys = <&usbphyc_port0>;
+	status = "okay";
+};
+
+
 &usbotg_hs {
+	pinctrl-0 = <&usbotg_hs_pins_a>;
+	pinctrl-names = "default";
+	phys = <&usbphyc_port1 0>;
+	usb-role-switch;
+	vbus-supply = <&usb_otg1_vbus>;
+	phy-names = "usb2-phy";
+	status = "okay";
+};
+
+&usbphyc {
+	status = "okay";
 };
 
 &usbphyc_port0 {
+	st,phy-tuning = <&usb_phy_tuning>;
 };
 
 &usbphyc_port1 {
+	st,phy-tuning = <&usb_phy_tuning>;
 };
 
 &cryp1 {
@@ -388,7 +428,6 @@
 	status = "okay";
 };
 
-//#include "stm32mp15xx-evx.dtsi"
 
 &cec {
 	pinctrl-names = "default";
@@ -692,31 +731,6 @@
 	status = "disabled";
 };
 
-&usbh_ehci {
-	phys = <&usbphyc_port0>;
-	status = "okay";
-};
-
-&usbotg_hs {
-	pinctrl-0 = <&usbotg_hs_pins_a>;
-	pinctrl-names = "default";
-	phys = <&usbphyc_port1 0>;
-	phy-names = "usb2-phy";
-	status = "okay";
-};
-
-&usbphyc {
-	status = "okay";
-};
-
-&usbphyc_port0 {
-	st,phy-tuning = <&usb_phy_tuning>;
-};
-
-&usbphyc_port1 {
-	st,phy-tuning = <&usb_phy_tuning>;
-};
-
 &dsi {
 	#address-cells = <1>;
 	#size-cells = <0>;
@@ -823,7 +837,9 @@
 
 	periph_on_pin: periph-on-0 {
 		pins {
-			pinmux = <STM32_PINMUX('F', 3, GPIO)>; /* PERIPH_ON */
+			pinmux = <STM32_PINMUX('F', 3, GPIO)>, /* PERIPH_ON */
+			<STM32_PINMUX('D', 14, GPIO)>, /* USB_HOST_PWR_ON */
+			<STM32_PINMUX('A', 15, GPIO)>; /* USB_OTG1_PWR */
 			drive-push-pull;
 			bias-pull-up;
 			output-high;
