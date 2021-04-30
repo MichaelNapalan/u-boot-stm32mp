@@ -552,8 +552,7 @@
 	phy-handle = <&phy0>;
 	nvmem-cells = <&ethernet_mac_address>;
 	nvmem-cell-names = "mac-address";
-	phy-reset-gpios = <&gpiod 11 GPIO_ACTIVE_HIGH>;
-	st,int-phyclk;
+	phy-reset-gpios = <&gpiod 11 GPIO_ACTIVE_LOW>;
 
 	mdio0 {
 		#address-cells = <1>;

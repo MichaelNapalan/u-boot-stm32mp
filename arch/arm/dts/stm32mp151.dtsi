@@ -1637,7 +1637,7 @@
 				 <&rcc ETHRX>,
 				 <&rcc ETHSTP>,
 				 <&rcc SYSCFG>,
-				 <&rcc ETHCK>;
+				 <&rcc ETHCK_K>;
 			st,syscon = <&syscfg 0x4>;
 			snps,mixed-burst;
 			snps,pbl = <2>;

@@ -848,6 +848,30 @@ int board_interface_eth_init(struct udevice *dev,
 	u32 value;
 	bool eth_clk_sel_reg = false;
 	bool eth_ref_clk_sel_reg = false;
+	int ret;
+	struct gpio_desc gpio;
+
+	if (of_machine_is_compatible("st,stm32mp1-som")) {
+		ret = gpio_request_by_name_nodev(dev->node,
+						 "phy-reset-gpios", 0,
+						 &gpio,
+						 GPIOD_IS_OUT |
+						 GPIOD_IS_OUT_ACTIVE);
+
+		if (ret) {
+			debug("%s: could not find reset-gpios\n",  __func__);
+			return ret;
+
+		}
+
+		ret = dm_gpio_set_value(&gpio, 0);
+		if (ret < 0) {
+			debug("dm_gpio_set_value(phy_reset, deassert) failed: %d",
+			      ret);
+			return ret;
+		}
+
+	}
 
 	/* Gigabit Ethernet 125MHz clock selection. */
 	eth_clk_sel_reg = dev_read_bool(dev, "st,eth_clk_sel");
@@ -887,8 +911,7 @@ int board_interface_eth_init(struct udevice *dev,
 	case PHY_INTERFACE_MODE_RGMII_ID:
 	case PHY_INTERFACE_MODE_RGMII_RXID:
 	case PHY_INTERFACE_MODE_RGMII_TXID:
-		if (eth_clk_sel_reg &&
-			!of_machine_is_compatible("st,stm32mp1-som"))
+		if (eth_clk_sel_reg)
 			value = SYSCFG_PMCSETR_ETH_SEL_RGMII |
 				SYSCFG_PMCSETR_ETH_CLK_SEL;
 		else
