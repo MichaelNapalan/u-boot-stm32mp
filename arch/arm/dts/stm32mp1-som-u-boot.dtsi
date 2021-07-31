@@ -35,6 +35,13 @@
 			default-state = "off";
 			status = "okay";
 		};
+
+		blue {
+			label = "error";
+			gpios = <&gpioa 14 GPIO_ACTIVE_LOW>;
+			default-state = "on";
+			status = "okay";
+		};
 	};
 
 	firmware {
